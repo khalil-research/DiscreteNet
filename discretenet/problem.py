@@ -54,6 +54,39 @@ class Problem(ABC):
     def get_features(self) -> Dict[str, float]:
         pass
 
+    @staticmethod
+    def _get_variable_type(var: pyo.Var) -> str:
+        domain = var.domain
+
+        # Virtual sets aren't hashable, so have to use lists instead of sets
+        continuous_domains = [
+            pyo.Any,
+            pyo.Reals,
+            pyo.PositiveReals,
+            pyo.NonPositiveReals,
+            pyo.NegativeReals,
+            pyo.NonNegativeReals,
+            pyo.PercentFraction,
+            pyo.UnitInterval,
+        ]
+        integer_domains = [
+            pyo.Integers,
+            pyo.PositiveIntegers,
+            pyo.NonPositiveIntegers,
+            pyo.NegativeIntegers,
+            pyo.NonNegativeIntegers,
+        ]
+        binary_domains = [pyo.Boolean, pyo.Binary]
+
+        if domain in continuous_domains:
+            return "continuous"
+        elif domain in integer_domains:
+            return "integer"
+        elif domain in binary_domains:
+            return "binary"
+
+        raise ValueError("Unrecognized variable domain")
+
     def get_variable_constraint_graph(self) -> nx.Graph:
         """
         Construct a bipartite Variable Constraint Graph of the problem instance
@@ -73,6 +106,11 @@ class Problem(ABC):
         bounded or equality bounded. Constraint nodes also have a ``bound``
         attribute, with the numerical bound.
 
+        Variable nodes have a ``type`` attribute, one of "continuous", "integer",
+        or "binary" depending on the domain (a Pyomo Virtual Set) of the variable.
+        If variables need to be bounded, constraints should be added rather than
+        creating a new Pyomo Set.
+
         If the objective function is linear, variables which participate in the
         objective function have their objective coefficient in the ``obj_coeff``
         node attribute. Since objectives can be minimized or maximized, the
@@ -82,6 +120,7 @@ class Problem(ABC):
         :return: A bipartite variable constraint graph
         """
 
+        # TODO: Put variable domain as a node attribute
         G = nx.Graph()
 
         for constr in self.model.component_objects(pyo.Constraint):
@@ -116,7 +155,7 @@ class Problem(ABC):
                 # for nonlinear constraints
                 for var in identify_variables(constr.body):
                     # Graph nodes are sets, so this is fine
-                    G.add_node(var.getname())
+                    G.add_node(var.getname(), type=self._get_variable_type(var))
 
                     # No coeff attribute for non-linear constraints
                     G.add_edge(constr_name, var.getname())
@@ -127,7 +166,7 @@ class Problem(ABC):
                         bound -= coeff * multiplier
                         continue
 
-                    G.add_node(var.getname())
+                    G.add_node(var.getname(), type=self._get_variable_type(var))
 
                     G.add_edge(constr_name, var.getname(), coeff=coeff)
 
@@ -145,7 +184,7 @@ class Problem(ABC):
                     continue
 
                 # All variables should be in the VCG by now, but just in case
-                G.add_node(var.getname())
+                G.add_node(var.getname(), type=self._get_variable_type(var))
                 G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
 
         return G
