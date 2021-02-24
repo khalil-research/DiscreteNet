@@ -32,6 +32,8 @@ class Problem(ABC):
         Generate a concrete Pyomo model of the problem
 
         By the end of initialization, the model must be stored in ``self.model``.
+        The model objective must be stored in ``self.model.OBJ``.
+
         After initialization, the model is assumed to be immutable.
         """
 
@@ -62,45 +64,89 @@ class Problem(ABC):
         data will have a ``coeff`` attribute with the coefficient, otherwise
         there will be no ``coeff`` edge attribute.
 
+        Pyomo constraints can be modelled generically to have upper and lower
+        bounds. For the VCG, all constraints are converted to be either upper
+        bounded (constr <= bound), or equality bounded (constr == bound). The
+        latter form could be split into two separate upper bounded constraints,
+        but is left as-is instead. Constraint nodes have a ``kind`` attribute,
+        one of ``leq`` or ``eq``, indicating whether the constraint is upper
+        bounded or equality bounded. Constraint nodes also have a ``bound``
+        attribute, with the numerical bound.
+
+        If the objective function is linear, variables which participate in the
+        objective function have their objective coefficient in the ``obj_coeff``
+        node attribute. Since objectives can be minimized or maximized, the
+        objective is converted to minimizing sense for the VCG, and objective
+        coefficients negated as necessary.
+
         :return: A bipartite variable constraint graph
         """
-        constraint_to_vars = {}
-        variables = set()
-
-        for c in self.model.component_objects(pyo.Constraint):
-            constr_name = c.get_name()
-            constraint_to_vars[constr_name] = []
-
-            is_linear, var_list = decompose_term(c.body)
-
-            if not is_linear:
-                for v in identify_variables(c.body):
-                    constraint_to_vars[constr_name].append((v.getname(), None))
-                    variables.add(v.getname())
-            else:
-                for coeff, v in var_list:
-                    if v is None:
-                        # Constant term
-                        continue
-
-                    constraint_to_vars[constr_name].append((v.getname(), coeff))
-                    variables.add(v.getname())
 
         G = nx.Graph()
 
-        for v in variables:
-            G.add_node(v)
+        for constr in self.model.component_objects(pyo.Constraint):
+            constr_name = constr.getname()
+            is_linear, var_list = decompose_term(constr.body)
 
-        for constr_name, _vars in constraint_to_vars.items():
-            G.add_node(constr_name)
+            # All constraints in the VCG will either be <= or == bounded
+            if constr.has_lb() and not constr.has_ub():  # constr >= b
+                multiplier = -1
+                bound = constr.lower()
+                kind = "leq"
+            elif not constr.has_lb() and constr.has_ub():  # constr <= b
+                multiplier = 1
+                bound = constr.upper()
+                kind = "leq"
+            elif constr.lower() == constr.upper():  # constr == b
+                multiplier = 1
+                bound = constr.upper()
+                kind = "eq"
+            else:
+                # lb <= constr <= ub
+                raise NotImplementedError(
+                    "Double-bounded constraints are not supported"
+                )
 
-            for v, coeff in _vars:
-                edge_args = {}
+            bound *= multiplier
 
-                if coeff:
-                    edge_args["coeff"] = coeff
+            G.add_node(constr_name, kind=kind)
 
-                G.add_edge(c, v, **edge_args)
+            if not is_linear:
+                # Pyomo currently doesn't support extracting coefficients
+                # for nonlinear constraints
+                for var in identify_variables(constr.body):
+                    # Graph nodes are sets, so this is fine
+                    G.add_node(var.getname())
+
+                    # No coeff attribute for non-linear constraints
+                    G.add_edge(constr_name, var.getname())
+            else:
+                for coeff, var in var_list:
+                    if var is None:
+                        # Constant term - subtract from bound
+                        bound -= coeff * multiplier
+                        continue
+
+                    G.add_node(var.getname())
+
+                    G.add_edge(constr_name, var.getname(), coeff=coeff)
+
+            # Add attributes to the constraint node
+            G.nodes[constr_name]["bound"] = bound
+
+        # Tag variable nodes with their coefficient in the objective
+        is_objective_linear, objective_var_list = decompose_term(self.model.OBJ.expr)
+        objective_multiplier = 1 if self.model.OBJ.is_minimizing() else -1
+
+        if is_objective_linear:
+            for coeff, var in objective_var_list:
+                if var is None:
+                    # It's technically possible to add a constant term to the objective
+                    continue
+
+                # All variables should be in the VCG by now, but just in case
+                G.add_node(var.getname())
+                G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
 
         return G
 
