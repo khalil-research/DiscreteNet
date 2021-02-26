@@ -82,7 +82,15 @@ class Generator(ABC):
         """
         Generate and return ``n_instances`` problem instances by calling ``generate()``
 
-        Generation is performed in parallel using ``n_jobs`` joblib jobs.
+        Generation is performed in parallel using ``n_jobs`` joblib jobs with the default
+        backend, which is usually multiprocessing.
+
+        Because forked processes have identical memory initally, all processes will
+        share the same random seed. By default, this means that each set of processes
+        would generate the same set of instances. To fix this, we pre-generate
+        random seeds for every instance, and call ``self.set_seed()`` prior to each
+        instance creation. The main process retains its random state, so subsequent
+        calls to the generator will generate different instances.
 
         :param n_instances: Number of instances to create
         :param n_jobs: Number of joblib jobs to use
@@ -91,21 +99,25 @@ class Generator(ABC):
         :return: A list of generated concrete ``Problem`` instances
         """
 
-        # Create a local generate method to include the save call if necessary.
-        # This is slightly more efficient than having a check to call save
-        # in every generate call.
-
         if save:
 
-            def _generate():
+            def _generate(random_seed):
+                self.set_seed(random_seed)
                 instance = self.generate()
                 instance.save(self.path_prefix)
                 return instance
 
         else:
-            _generate = self.generate
+
+            def _generate(random_seed):
+                self.set_seed(random_seed)
+                return self.generate()
+
+        random_states = np.random.randint(np.iinfo(np.int32).max, size=n_instances)
 
         with Parallel(n_jobs=n_jobs) as parallel:
-            instances = parallel(delayed(_generate)() for _ in range(n_instances))
+            instances = parallel(
+                delayed(_generate)(random_seed) for random_seed in random_states
+            )
 
         return instances
