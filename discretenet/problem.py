@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Dict, Union
+from typing import Dict, Union, Type, TypeVar
 
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
 import networkx as nx
+
+T = TypeVar("T", bound="Problem")
 
 
 class Problem(ABC):
@@ -248,7 +250,7 @@ class Problem(ABC):
             pickle.dump(self, fd)
 
     @classmethod
-    def load(cls, pkl_path: str) -> "Problem":
+    def load(cls: Type[T], pkl_path: str) -> T:
         """
         Load a problem instance from a pickle file saved by ``dump()``
 

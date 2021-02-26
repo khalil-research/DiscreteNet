@@ -41,7 +41,7 @@ class Generator(Generic[T]):
         harder set the variable may be sampled from Normal(0, 10)).
 
         :param random_seed: The random seed to use
-        :param path_prefix:  Path prefix to pass to instance ``save()`` methods
+        :param path_prefix: Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
             to be changed by the user after generator instantiation if desired.
         """
