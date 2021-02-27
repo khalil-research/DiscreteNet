@@ -32,13 +32,9 @@ class Generator(Generic[T]):
         to ensure the random seed is properly initialized.
 
         In concrete generators, should take callables used to sample the parameters
-        used to instantiate a :class:`discretenet.problem.Problem`. These callables
-        should be set as instance attributes, and called in ``generate()``.
-
-        For example, a callable returning a number from Normal(0, 1). The range of
-        values returned by the callable is expected to change in different
-        :class:`Generator` instances to set the difficulty (for example, in a
-        harder set the variable may be sampled from Normal(0, 10)).
+        used to instantiate a :class:`discretenet.problem.Problem`, or parameters passed
+        to callables (for example, ``num_nodes``). These callables or parameters are
+        used in ``generate()``.
 
         :param random_seed: The random seed to use
         :param path_prefix: Path prefix to pass to instance ``save()`` methods
@@ -66,10 +62,6 @@ class Generator(Generic[T]):
     def generate(self) -> T:
         """
         Generate and return a single :class:`discretenet.problem.Problem` instance
-
-        Should sample for parameters from the defined parameter generator callables
-        (from the ``__init__()`` method), instantiate an instance with those parameters,
-        and return it.
 
         :return: An initialized concrete ``Problem`` instance
         """
