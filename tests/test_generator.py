@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pyomo.environ as pyo
 import numpy as np
 
@@ -6,6 +8,12 @@ from discretenet.problem import Problem
 
 
 class FakeProblem(Problem):
+    """
+    A fake problem, with an actual pyomo Concrete Model. Pickle doesn't
+    work nicely with Mock objects, so this is used to test parallel
+    behaviour.
+    """
+
     is_linear = True
 
     def __init__(self, obj_coeffs: np.array, constr_coeffs: np.array):
@@ -29,6 +37,25 @@ class FakeGenerator(Generator[FakeProblem]):
         obj_coeffs = np.random.randint(10, size=self.n)
         constr_coeffs = np.random.randint(10, size=self.n)
         return FakeProblem(obj_coeffs, constr_coeffs)
+
+
+class MockProblem(Problem):
+    is_linear = True
+
+    def __init__(self):
+        super().__init__()
+        self.model = MagicMock()
+
+    def get_name(self):
+        return "mock_problem"
+
+
+class MockGenerator(Generator[MockProblem]):
+    def __init__(self, random_seed=42, path_prefix="mock"):
+        super().__init__(random_seed, path_prefix)
+
+    def generate(self):
+        return MockProblem()
 
 
 def test_generator_calls_are_different():
@@ -92,3 +119,9 @@ def test_generator_reproducible_multiple_processes():
     # If the seeds weren't pre-set, some of these would be duplicated
     obj_coeffs = [tuple(i.obj_coeffs.tolist()) for i in instances]
     assert len(instances) == len(set(obj_coeffs))
+
+
+def test_generator_calls_save_if_told_to(tmp_path):
+    generate_mock_problem = MockGenerator(path_prefix=tmp_path)
+    instances = generate_mock_problem(n_instances=1, n_jobs=1, save=True)
+    instances[0].model.write.assert_called_with(str(tmp_path / "mock_problem.mps"))

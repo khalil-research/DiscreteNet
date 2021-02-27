@@ -83,7 +83,7 @@ class Generator(Generic[T]):
     def _generate_and_save(self, random_seed) -> T:
         self.set_seed(random_seed)
         instance = self.generate()
-        instance.save()
+        instance.save(self.path_prefix)
         return instance
 
     def __call__(self, n_instances, n_jobs=-1, save=True) -> List[T]:
