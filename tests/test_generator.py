@@ -66,7 +66,6 @@ def test_generator_calls_are_different():
 
     generate_fake_problem = FakeGenerator(n=5, random_seed=42)
 
-
     instances1 = generate_fake_problem(n_instances=10, n_jobs=1, save=False)
     instances2 = generate_fake_problem(n_instances=10, n_jobs=1, save=False)
 
@@ -77,7 +76,6 @@ def test_generator_calls_are_different():
         np.any(i1.constr_coeffs != i2.obj_coeffs)
         for i1, i2 in zip(instances1, instances2)
     )
-    assert True is False
 
 
 def test_generator_reproducible_single_process():
