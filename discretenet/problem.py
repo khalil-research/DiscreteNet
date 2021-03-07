@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pickle
-from typing import Dict, Union
+from typing import Dict, Union, Type, TypeVar
 
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
 import networkx as nx
+
+T = TypeVar("T", bound="Problem")
 
 
 class Problem(ABC):
@@ -55,7 +57,17 @@ class Problem(ABC):
         pass
 
     @staticmethod
-    def _get_variable_type(var: pyo.Var) -> str:
+    def _get_variable_domain(var: pyo.Var) -> str:
+        """
+        Return the type of the given variable: continuous, integer, or binary.
+
+        Variable domain does not refer to its bounds, as those can be accessed
+        directly. Only default Pyomo Virtual Sets are checked against, variables
+        should be bounded using constraints rather than adding new Sets.
+
+        :param var: Pyomo Variable
+        :return: str, one of "continuous", "integer", or "binary"
+        """
         domain = var.domain
 
         # Virtual sets aren't hashable, so have to use lists instead of sets
@@ -95,7 +107,8 @@ class Problem(ABC):
         problem constraints. Nodes are connected by edges if a variable
         participates in a constraint. If the interaction is linear, the edge
         data will have a ``coeff`` attribute with the coefficient, otherwise
-        there will be no ``coeff`` edge attribute.
+        there will be no ``coeff`` edge attribute. Variable nodes have a ``type``
+        attribute of "variable", and constraints "constraints".
 
         Pyomo constraints can be modelled generically to have upper and lower
         bounds. For the VCG, all constraints are converted to be either upper
@@ -106,7 +119,7 @@ class Problem(ABC):
         bounded or equality bounded. Constraint nodes also have a ``bound``
         attribute, with the numerical bound.
 
-        Variable nodes have a ``type`` attribute, one of "continuous", "integer",
+        Variable nodes have a ``domain`` attribute, one of "continuous", "integer",
         or "binary" depending on the domain (a Pyomo Virtual Set) of the variable.
         If variables need to be bounded, constraints should be added rather than
         creating a new Pyomo Set.
@@ -120,7 +133,6 @@ class Problem(ABC):
         :return: A bipartite variable constraint graph
         """
 
-        # TODO: Put variable domain as a node attribute
         G = nx.Graph()
 
         for constr in self.model.component_objects(pyo.Constraint):
@@ -148,14 +160,18 @@ class Problem(ABC):
 
             bound *= multiplier
 
-            G.add_node(constr_name, kind=kind)
+            G.add_node(constr_name, type="constraint", kind=kind)
 
             if not is_linear:
                 # Pyomo currently doesn't support extracting coefficients
                 # for nonlinear constraints
                 for var in identify_variables(constr.body):
                     # Graph nodes are sets, so this is fine
-                    G.add_node(var.getname(), type=self._get_variable_type(var))
+                    G.add_node(
+                        var.getname(),
+                        type="variable",
+                        domain=self._get_variable_domain(var),
+                    )
 
                     # No coeff attribute for non-linear constraints
                     G.add_edge(constr_name, var.getname())
@@ -166,7 +182,11 @@ class Problem(ABC):
                         bound -= coeff * multiplier
                         continue
 
-                    G.add_node(var.getname(), type=self._get_variable_type(var))
+                    G.add_node(
+                        var.getname(),
+                        type="variable",
+                        domain=self._get_variable_domain(var),
+                    )
 
                     G.add_edge(constr_name, var.getname(), coeff=coeff)
 
@@ -184,7 +204,11 @@ class Problem(ABC):
                     continue
 
                 # All variables should be in the VCG by now, but just in case
-                G.add_node(var.getname(), type=self._get_variable_type(var))
+                G.add_node(
+                    var.getname(),
+                    type="variable",
+                    domain=self._get_variable_domain(var),
+                )
                 G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
 
         return G
@@ -226,7 +250,7 @@ class Problem(ABC):
             pickle.dump(self, fd)
 
     @classmethod
-    def load(cls, pkl_path: str) -> "Problem":
+    def load(cls: Type[T], pkl_path: str) -> T:
         """
         Load a problem instance from a pickle file saved by ``dump()``
 

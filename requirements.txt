@@ -1,0 +1,8 @@
+black==20.8b1
+flake8==3.8.4
+joblib==1.0.1
+mypy-extensions==0.4.3
+networkx==2.5
+numpy==1.19.5
+Pyomo==5.7.3
+pytest==6.2.2
