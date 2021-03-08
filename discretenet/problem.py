@@ -230,7 +230,7 @@ class Problem(ABC):
         else:
             filename = self.__build_full_path(".gms", path_prefix)
 
-        self.model.write(filename)
+        self.model.write(filename, io_options={"symbolic_solver_labels": True})
 
     def save_graph(self, path_prefix: str = None) -> None:
         pass
