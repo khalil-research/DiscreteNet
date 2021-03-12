@@ -60,7 +60,7 @@ class SchoolBusSchedulingProblem(Problem):
                 pyo.quicksum(
                     pyo.quicksum(
                         m.x[t_prime, s, r]
-                        for t_prime in range(t, t + m.R[s - 1, r] - 1)
+                        for t_prime in range(t, min(t + m.R[s][r], all_time[-1] + 1))
                     )
                     for s, r in m.Rs
                 )
@@ -84,7 +84,7 @@ class SchoolBusSchedulingGenerator(Generator):
         path_prefix: Union[str, Path] = None,
         num_routes=6,
         max_time=120,
-        school_start_interval=5,
+        # school_start_interval=5,
         num_schools=5,
         time_window=20,
         route_length_avg=30,
@@ -98,7 +98,7 @@ class SchoolBusSchedulingGenerator(Generator):
             to be changed by the user after generator instantiation if desired.
         :param num_routes: number of bus routes per school
         :param max_time: total number of time slots ex: 120 for 2 hours
-        :param school_start_interval: school start time intervals ex: 10 for 10, 20, 30 ...
+        :param school_start_interval: school start time intervals ex: 10 for 10, 20, 30 ... (Not implemented)
         :param num_schools: number of schools
         :param time_window: time window of acceptable bus arrival time
         :param route_length_avg: average route length (time)
@@ -107,11 +107,11 @@ class SchoolBusSchedulingGenerator(Generator):
         super().__init__(random_seed, path_prefix)
         self.num_routes = num_routes
         self.all_time = range(1, max_time)
-        self.school_start_times = range(
-            school_start_interval,
-            max_time + school_start_interval,
-            school_start_interval,
-        )
+        # self.school_start_times = range(
+        #     school_start_interval,
+        #     max_time + school_start_interval,
+        #     school_start_interval,
+        # )
         self.num_schools = num_schools
         self.route_length_avg = route_length_avg
         self.route_length_std = route_length_std
@@ -146,7 +146,7 @@ class SchoolBusSchedulingGenerator(Generator):
         generate schools using num_schools. Keeping it simple for now,
         later on we should utilize networkx and maybe osm
         """
-        self.schools = range(1, self.num_schools)
+        self.schools = range(1, self.num_schools + 1)
 
     def generate_routes(self):
         routes = []
@@ -166,14 +166,14 @@ class SchoolBusSchedulingGenerator(Generator):
 
 if __name__ == "__main__":
     generator = SchoolBusSchedulingGenerator(
-        random_seed=2,
+        random_seed=1,
         path_prefix="easy",
-        num_routes=6,
+        num_routes=3,
         max_time=120,
-        school_start_interval=5,
+        # school_start_interval=5,
         num_schools=5,
         time_window=20,
         route_length_avg=30,
         route_length_std=10,
     )
-    generator(2, 1)
+    generator(1, 1)
