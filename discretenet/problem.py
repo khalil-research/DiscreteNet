@@ -768,16 +768,24 @@ class Problem(ABC):
 
     def __build_full_path(
         self, extension: str, path_prefix: Union[str, Path], extra_params: str = ""
-    ):
+    ) -> str:
+        """
+        Build a filename, creating directories so it can be immediately
+        written to if necessary
+        """
+
         filename = self.get_name() + extra_params + extension
 
         if path_prefix:
             if isinstance(path_prefix, str):
                 path_prefix = Path(path_prefix).resolve()
 
-            filename = str(path_prefix.joinpath(filename))
+            filename = path_prefix.joinpath(filename)
 
-        return filename
+        if not filename.parent.exists():
+            filename.parent.mkdir(parents=True)
+
+        return str(filename)
 
     def save(self, path_prefix: Union[str, Path] = None, model_only=True) -> None:
         """
