@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import json
 from pathlib import Path
 import pickle
 from typing import Dict, Union, Type, TypeVar
@@ -53,6 +54,22 @@ class Problem(ABC):
         :return: Model instance name
         """
 
+        pass
+
+    @abstractmethod
+    def get_parameters(self) -> Dict[str, Union[str, float, int, bool]]:
+        """
+        Return a dictionary of parameters used to construct the instance
+
+        It should be possible to re-initialize an identical instance by passing
+        these parameters to the :meth:`~__init__` method (subject to random
+        state).
+
+        Parameters must be JSON-serializable by default. If not, override
+        the :meth:`save` method to save them differently.
+
+        :return: A dictionary of problem parameters
+        """
         pass
 
     def get_features(self) -> Dict[str, float]:
@@ -310,8 +327,6 @@ class Problem(ABC):
             features["num_binary_variables"] + features["num_integer_variables"]
         )
 
-        # TODO: num_unbounded_non_continuous_variables
-
         features["fraction_binary_variables"] = (
             features["num_binary_variables"] / features["num_variables"]
         )
@@ -324,8 +339,6 @@ class Problem(ABC):
         features["fraction_non_continuous_variables"] = (
             features["num_non_continuous_variables"] / features["num_variables"]
         )
-
-        # TODO: fraction_unbounded_non_continuous_variables
 
         # VCG Variable Node Degree Statistics - computed with respect to
         # all, only continuous, and only non-continuous variables
@@ -759,8 +772,10 @@ class Problem(ABC):
 
         return G
 
-    def __build_full_path(self, extension: str, path_prefix: Union[str, Path]):
-        filename = self.get_name() + extension
+    def __build_full_path(
+        self, extension: str, path_prefix: Union[str, Path], extra_params: str = ""
+    ):
+        filename = self.get_name() + extra_params + extension
 
         if path_prefix:
             if isinstance(path_prefix, str):
@@ -770,13 +785,39 @@ class Problem(ABC):
 
         return filename
 
-    def save(self, path_prefix: Union[str, Path] = None) -> None:
-        if self.is_linear:
-            filename = self.__build_full_path(".mps", path_prefix)
-        else:
-            filename = self.__build_full_path(".gms", path_prefix)
+    def save(self, path_prefix: Union[str, Path] = None, model_only=True) -> None:
+        """
+        Save the associated model, problem parameters, and problem features
 
-        self.model.write(filename)
+        The model will be saved to a .mps file if it is linear, and .gms
+        otherwise.
+
+        Parameters and features will be saved to json files.
+
+        :param path_prefix: Folder to save to
+        :param model_only: Whether to save only the model, or parameters and
+               features as well
+        """
+        if self.is_linear:
+            model_filename = self.__build_full_path(".mps", path_prefix)
+        else:
+            model_filename = self.__build_full_path(".gms", path_prefix)
+
+        self.model.write(model_filename)
+
+        if not model_only:
+            params_filename = self.__build_full_path(
+                ".json", path_prefix, extra_params="_parameters"
+            )
+            features_filename = self.__build_full_path(
+                ".json", path_prefix, extra_params="_features"
+            )
+
+            with open(params_filename, "w+") as fd:
+                json.dump(self.get_parameters(), fd)
+
+            with open(features_filename, "w+") as fd:
+                json.dump(self.get_features(), fd)
 
     def save_graph(self, path_prefix: str = None) -> None:
         pass

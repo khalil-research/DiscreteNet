@@ -18,6 +18,9 @@ class MockProblem(Problem):
     def get_name(self) -> str:
         return "mock_problem"
 
+    def get_parameters(self):
+        return {}
+
 
 class LinearProblem(Problem):
     """
@@ -56,6 +59,9 @@ class LinearProblem(Problem):
     def get_name(self) -> str:
         return "linear_problem"
 
+    def get_parameters(self):
+        return {}
+
 
 class NonlinearProblem(Problem):
     """
@@ -84,6 +90,9 @@ class NonlinearProblem(Problem):
 
     def get_name(self) -> str:
         return "linear_problem"
+
+    def get_parameters(self):
+        return {}
 
 
 @pytest.fixture
@@ -196,9 +205,25 @@ class TestSavingLoading:
 
         problem.model.write.assert_called_with(str(tmp_path / "mock_problem.mps"))
 
+        params_path = tmp_path / "mock_problem_parameters.json"
+        assert not params_path.exists()
+
+        features_path = tmp_path / "mock_problem_features.json"
+        assert not features_path.exists()
+
     def test_save_nonlinear_problem(self, tmp_path):
         problem = MockProblem()
         problem.is_linear = False
         problem.save(tmp_path)
 
         problem.model.write.assert_called_with(str(tmp_path / "mock_problem.gms"))
+
+    def test_save_extra_files(self, tmp_path):
+        problem = LinearProblem()
+        problem.save(tmp_path, model_only=False)
+
+        params_path = tmp_path / "linear_problem_parameters.json"
+        assert params_path.exists()
+
+        features_path = tmp_path / "linear_problem_features.json"
+        assert features_path.exists()
