@@ -6,3 +6,4 @@ networkx==2.5
 numpy==1.19.5
 Pyomo==5.7.3
 pytest==6.2.2
+scipy==1.5.4
