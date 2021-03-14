@@ -50,7 +50,7 @@ class LinearProblem(Problem):
         model.constr3 = pyo.Constraint(expr=model.y + model.z == 3)
 
         # Maximizing objective, to make sure the coeffs are flipped
-        model.OBJ = pyo.Objective(
+        model.objective = pyo.Objective(
             expr=-(1 * model.x[1] + 2 * model.x[2] + 3 * model.y + 4 * model.z),
             sense=pyo.maximize,
         )
@@ -83,7 +83,7 @@ class NonlinearProblem(Problem):
         )
 
         # Nonlinear objective function
-        model.OBJ = pyo.Objective(
+        model.objective = pyo.Objective(
             expr=model.x[1] * model.x[1] + model.x[2] * model.x[2]
         )
         self.model = model

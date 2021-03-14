@@ -37,7 +37,7 @@ class Problem(ABC):
         Generate a concrete Pyomo model of the problem
 
         By the end of initialization, the model must be stored in ``self.model``.
-        The model objective must be stored in ``self.model.OBJ``.
+        The model objective must be stored in ``self.model.objective``.
 
         After initialization, the model is assumed to be immutable.
         """
@@ -476,7 +476,9 @@ class Problem(ABC):
             features[f"{feature_prefix}_cv"] = variation(normalized_coeffs)
 
         # Objective function features
-        is_objective_linear, objective_var_list = decompose_term(self.model.OBJ.expr)
+        is_objective_linear, objective_var_list = decompose_term(
+            self.model.objective.expr
+        )
 
         objective_coefficients = [
             (abs(coeff), var) for coeff, var in objective_var_list if var is not None
@@ -745,8 +747,10 @@ class Problem(ABC):
             G.nodes[constr_name]["bound"] = bound
 
         # Tag variable nodes with their coefficient in the objective
-        is_objective_linear, objective_var_list = decompose_term(self.model.OBJ.expr)
-        objective_multiplier = 1 if self.model.OBJ.is_minimizing() else -1
+        is_objective_linear, objective_var_list = decompose_term(
+            self.model.objective.expr
+        )
+        objective_multiplier = 1 if self.model.objective.is_minimizing() else -1
 
         if is_objective_linear:
             for coeff, var in objective_var_list:
