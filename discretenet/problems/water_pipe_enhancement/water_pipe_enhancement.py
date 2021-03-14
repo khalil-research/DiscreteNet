@@ -1,8 +1,13 @@
 from pathlib import Path
-import random
+import numpy.random as random
 from typing import Union
 import pyomo.environ as pyo
 import networkx as nx
+try:
+    from importlib.resources import open_binary
+except ImportError:
+    from importlib_resources import open_binary
+import pickle
 
 from discretenet.problem import Problem
 from discretenet.generator import Generator
@@ -168,7 +173,11 @@ class WaterPipeEnhancementGenerator(Generator):
         self.T = None
         self.name = None
 
-        self.graph = nx.read_gpickle("graphs/{}.gpickle".format(graph_instance))
+        with open_binary(
+            "discretenet.problems.water_pipe_enhancement.graphs",
+            f"{graph_instance}.gpickle"
+        ) as fd:
+            self.graph = pickle.load(fd)
         self.undirected_graph = self.graph.to_undirected()
 
     def generate(self):
@@ -203,8 +212,8 @@ class WaterPipeEnhancementGenerator(Generator):
         C_size = max(1, int(num_nodes * self.critical_rate))
         T_size = max(1, int(num_nodes * self.water_source_rate))
         R_size = max(1, int(num_nodes * self.housing_area_rate))
-        selected_nodes = random.choices(
-            list(self.graph.nodes()), k=C_size + T_size + R_size
+        selected_nodes = random.choice(
+            list(self.graph.nodes()), size=C_size + T_size + R_size
         )
         C = selected_nodes[:C_size]
         T = selected_nodes[C_size: C_size + T_size]

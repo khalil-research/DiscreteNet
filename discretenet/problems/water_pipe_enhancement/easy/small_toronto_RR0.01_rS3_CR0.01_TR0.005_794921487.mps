@@ -516,6 +516,7 @@ COLUMNS
      x(20979760_20979761) objective 23.227
      x(20979760_20979761) c_e_constraints(1)_ -1
      x(20979760_20979761) c_u_constraints(64)_ 1
+     x(20979760_20979761) c_l_constraints(152)_ 1
      x(20979760_20979761) c_u_constraints(154)_ -239
      x(20979760_20979761) c_e_constraints(506)_ -1
      x(20979760_29604863) objective 142.49099999999999
@@ -531,21 +532,25 @@ COLUMNS
      x(20979761_20979760) objective 23.227
      x(20979761_20979760) c_e_constraints(2)_ -1
      x(20979761_20979760) c_u_constraints(64)_ 1
+     x(20979761_20979760) c_l_constraints(152)_ 1
      x(20979761_20979760) c_u_constraints(160)_ -239
      x(20979761_20979760) c_e_constraints(506)_ -1
      x(20979761_24959516) objective 248.80799999999999
      x(20979761_24959516) c_e_constraints(2)_ -1
      x(20979761_24959516) c_u_constraints(68)_ 1
+     x(20979761_24959516) c_l_constraints(152)_ 1
      x(20979761_24959516) c_u_constraints(164)_ -239
      x(20979761_24959516) c_e_constraints(506)_ -1
      x(20979761_29604856) objective 142.55799999999999
      x(20979761_29604856) c_e_constraints(2)_ -1
      x(20979761_29604856) c_u_constraints(69)_ 1
+     x(20979761_29604856) c_l_constraints(152)_ 1
      x(20979761_29604856) c_u_constraints(166)_ -239
      x(20979761_29604856) c_e_constraints(506)_ -1
      x(20979761_42606787) objective 79.228999999999999
      x(20979761_42606787) c_e_constraints(2)_ -1
      x(20979761_42606787) c_u_constraints(67)_ 1
+     x(20979761_42606787) c_l_constraints(152)_ 1
      x(20979761_42606787) c_u_constraints(162)_ -239
      x(20979761_42606787) c_e_constraints(506)_ -1
      x(21436517_21436518) objective 21.792000000000002
@@ -571,16 +576,19 @@ COLUMNS
      x(24959516_20979761) objective 248.80799999999999
      x(24959516_20979761) c_e_constraints(5)_ -1
      x(24959516_20979761) c_u_constraints(68)_ 1
+     x(24959516_20979761) c_l_constraints(152)_ 1
      x(24959516_20979761) c_u_constraints(176)_ -239
      x(24959516_20979761) c_e_constraints(506)_ -1
      x(24959516_246692508) objective 49.325000000000003
      x(24959516_246692508) c_e_constraints(5)_ -1
      x(24959516_246692508) c_u_constraints(73)_ 1
+     x(24959516_246692508) c_l_constraints(152)_ 1
      x(24959516_246692508) c_u_constraints(178)_ -239
      x(24959516_246692508) c_e_constraints(506)_ -1
      x(24959516_246693686) objective 58.384999999999998
      x(24959516_246693686) c_e_constraints(5)_ -1
      x(24959516_246693686) c_u_constraints(74)_ 1
+     x(24959516_246693686) c_l_constraints(152)_ 1
      x(24959516_246693686) c_u_constraints(180)_ -239
      x(24959516_246693686) c_e_constraints(506)_ -1
      x(26240542_29603223) objective 111.81999999999999
@@ -671,13 +679,11 @@ COLUMNS
      x(29603320_246692484) objective 48.257000000000005
      x(29603320_246692484) c_e_constraints(10)_ -1
      x(29603320_246692484) c_u_constraints(88)_ 1
-     x(29603320_246692484) c_l_constraints(152)_ 1
      x(29603320_246692484) c_u_constraints(214)_ -239
      x(29603320_246692484) c_e_constraints(506)_ -1
      x(29603320_280889321) objective 75
      x(29603320_280889321) c_e_constraints(10)_ -1
      x(29603320_280889321) c_u_constraints(89)_ 1
-     x(29603320_280889321) c_l_constraints(152)_ 1
      x(29603320_280889321) c_u_constraints(216)_ -239
      x(29603320_280889321) c_e_constraints(506)_ -1
      x(29603436_29603222) objective 122.611
@@ -743,21 +749,25 @@ COLUMNS
      x(29604856_20979761) objective 142.55799999999999
      x(29604856_20979761) c_e_constraints(15)_ -1
      x(29604856_20979761) c_u_constraints(69)_ 1
+     x(29604856_20979761) c_l_constraints(152)_ 1
      x(29604856_20979761) c_u_constraints(246)_ -239
      x(29604856_20979761) c_e_constraints(506)_ -1
      x(29604856_29604863) objective 24.818000000000001
      x(29604856_29604863) c_e_constraints(15)_ -1
      x(29604856_29604863) c_u_constraints(100)_ 1
+     x(29604856_29604863) c_l_constraints(152)_ 1
      x(29604856_29604863) c_u_constraints(242)_ -239
      x(29604856_29604863) c_e_constraints(506)_ -1
      x(29604856_29604864) objective 249.017
      x(29604856_29604864) c_e_constraints(15)_ -1
      x(29604856_29604864) c_u_constraints(101)_ 1
+     x(29604856_29604864) c_l_constraints(152)_ 1
      x(29604856_29604864) c_u_constraints(244)_ -239
      x(29604856_29604864) c_e_constraints(506)_ -1
      x(29604856_29605004) objective 102.91800000000001
      x(29604856_29605004) c_e_constraints(15)_ -1
      x(29604856_29605004) c_u_constraints(102)_ 1
+     x(29604856_29605004) c_l_constraints(152)_ 1
      x(29604856_29605004) c_u_constraints(248)_ -239
      x(29604856_29605004) c_e_constraints(506)_ -1
      x(29604858_29604862) objective 233.39099999999999
@@ -793,13 +803,11 @@ COLUMNS
      x(29604862_29689427) objective 58.561
      x(29604862_29689427) c_e_constraints(17)_ -1
      x(29604862_29689427) c_u_constraints(108)_ 1
-     x(29604862_29689427) c_l_constraints(152)_ 1
      x(29604862_29689427) c_u_constraints(262)_ -239
      x(29604862_29689427) c_e_constraints(506)_ -1
      x(29604862_246692484) objective 90.388000000000005
      x(29604862_246692484) c_e_constraints(17)_ -1
      x(29604862_246692484) c_u_constraints(107)_ 1
-     x(29604862_246692484) c_l_constraints(152)_ 1
      x(29604862_246692484) c_u_constraints(260)_ -239
      x(29604862_246692484) c_e_constraints(506)_ -1
      x(29604863_20979760) objective 142.49099999999999
@@ -810,6 +818,7 @@ COLUMNS
      x(29604863_29604856) objective 24.818000000000001
      x(29604863_29604856) c_e_constraints(18)_ -1
      x(29604863_29604856) c_u_constraints(100)_ 1
+     x(29604863_29604856) c_l_constraints(152)_ 1
      x(29604863_29604856) c_u_constraints(266)_ -239
      x(29604863_29604856) c_e_constraints(506)_ -1
      x(29604863_29604888) objective 60.862000000000002
@@ -825,6 +834,7 @@ COLUMNS
      x(29604864_29604856) objective 249.017
      x(29604864_29604856) c_e_constraints(19)_ -1
      x(29604864_29604856) c_u_constraints(101)_ 1
+     x(29604864_29604856) c_l_constraints(152)_ 1
      x(29604864_29604856) c_u_constraints(272)_ -239
      x(29604864_29604856) c_e_constraints(506)_ -1
      x(29604864_29604858) objective 123.42200000000001
@@ -836,11 +846,13 @@ COLUMNS
      x(29604864_29605007) objective 99.384
      x(29604864_29605007) c_e_constraints(19)_ -1
      x(29604864_29605007) c_u_constraints(112)_ 1
+     x(29604864_29605007) c_l_constraints(152)_ 1
      x(29604864_29605007) c_u_constraints(278)_ -239
      x(29604864_29605007) c_e_constraints(506)_ -1
      x(29604864_246692508) objective 91.445999999999998
      x(29604864_246692508) c_e_constraints(19)_ -1
      x(29604864_246692508) c_u_constraints(111)_ 1
+     x(29604864_246692508) c_l_constraints(152)_ 1
      x(29604864_246692508) c_u_constraints(276)_ -239
      x(29604864_246692508) c_e_constraints(506)_ -1
      x(29604888_29604863) objective 60.862000000000002
@@ -901,6 +913,7 @@ COLUMNS
      x(29605004_29604856) objective 102.91800000000001
      x(29605004_29604856) c_e_constraints(24)_ -1
      x(29605004_29604856) c_u_constraints(102)_ 1
+     x(29605004_29604856) c_l_constraints(152)_ 1
      x(29605004_29604856) c_u_constraints(304)_ -239
      x(29605004_29604856) c_e_constraints(506)_ -1
      x(29605004_29605005) objective 87.247
@@ -941,6 +954,7 @@ COLUMNS
      x(29605006_29605007) objective 67.826999999999998
      x(29605006_29605007) c_e_constraints(26)_ -1
      x(29605006_29605007) c_u_constraints(125)_ 1
+     x(29605006_29605007) c_l_constraints(152)_ 1
      x(29605006_29605007) c_u_constraints(318)_ -239
      x(29605006_29605007) c_e_constraints(506)_ -1
      x(29605006_29605012) objective 81.278000000000006
@@ -951,21 +965,25 @@ COLUMNS
      x(29605007_29604864) objective 99.384
      x(29605007_29604864) c_e_constraints(27)_ -1
      x(29605007_29604864) c_u_constraints(112)_ 1
+     x(29605007_29604864) c_l_constraints(152)_ 1
      x(29605007_29604864) c_u_constraints(322)_ -239
      x(29605007_29604864) c_e_constraints(506)_ -1
      x(29605007_29605006) objective 67.826999999999998
      x(29605007_29605006) c_e_constraints(27)_ -1
      x(29605007_29605006) c_u_constraints(125)_ 1
+     x(29605007_29605006) c_l_constraints(152)_ 1
      x(29605007_29605006) c_u_constraints(324)_ -239
      x(29605007_29605006) c_e_constraints(506)_ -1
      x(29605007_29605008) objective 123.965
      x(29605007_29605008) c_e_constraints(27)_ -1
      x(29605007_29605008) c_u_constraints(127)_ 1
+     x(29605007_29605008) c_l_constraints(152)_ 1
      x(29605007_29605008) c_u_constraints(326)_ -239
      x(29605007_29605008) c_e_constraints(506)_ -1
      x(29605007_118417191) objective 36.704999999999998
      x(29605007_118417191) c_e_constraints(27)_ -1
      x(29605007_118417191) c_u_constraints(128)_ 1
+     x(29605007_118417191) c_l_constraints(152)_ 1
      x(29605007_118417191) c_u_constraints(328)_ -239
      x(29605007_118417191) c_e_constraints(506)_ -1
      x(29605008_29603222) objective 80.676999999999992
@@ -982,6 +1000,7 @@ COLUMNS
      x(29605008_29605007) objective 123.965
      x(29605008_29605007) c_e_constraints(28)_ -1
      x(29605008_29605007) c_u_constraints(127)_ 1
+     x(29605008_29605007) c_l_constraints(152)_ 1
      x(29605008_29605007) c_u_constraints(334)_ -239
      x(29605008_29605007) c_e_constraints(506)_ -1
      x(29605008_29605009) objective 234.90099999999998
@@ -1002,7 +1021,6 @@ COLUMNS
      x(29605009_29689427) objective 47.978000000000002
      x(29605009_29689427) c_e_constraints(29)_ -1
      x(29605009_29689427) c_u_constraints(130)_ 1
-     x(29605009_29689427) c_l_constraints(152)_ 1
      x(29605009_29689427) c_u_constraints(342)_ -239
      x(29605009_29689427) c_e_constraints(506)_ -1
      x(29605012_29603436) objective 67.932000000000002
@@ -1078,19 +1096,16 @@ COLUMNS
      x(29689427_29604862) objective 58.561
      x(29689427_29604862) c_e_constraints(36)_ -1
      x(29689427_29604862) c_u_constraints(108)_ 1
-     x(29689427_29604862) c_l_constraints(152)_ 1
      x(29689427_29604862) c_u_constraints(372)_ -239
      x(29689427_29604862) c_e_constraints(506)_ -1
      x(29689427_29605009) objective 47.978000000000002
      x(29689427_29605009) c_e_constraints(36)_ -1
      x(29689427_29605009) c_u_constraints(130)_ 1
-     x(29689427_29605009) c_l_constraints(152)_ 1
      x(29689427_29605009) c_u_constraints(374)_ -239
      x(29689427_29605009) c_e_constraints(506)_ -1
      x(29689427_3476893233) objective 53.370000000000005
      x(29689427_3476893233) c_e_constraints(36)_ -1
      x(29689427_3476893233) c_u_constraints(138)_ 1
-     x(29689427_3476893233) c_l_constraints(152)_ 1
      x(29689427_3476893233) c_u_constraints(376)_ -239
      x(29689427_3476893233) c_e_constraints(506)_ -1
      x(29696843_29604750) objective 115.89699999999999
@@ -1176,6 +1191,7 @@ COLUMNS
      x(42606787_20979761) objective 79.228999999999999
      x(42606787_20979761) c_e_constraints(43)_ -1
      x(42606787_20979761) c_u_constraints(67)_ 1
+     x(42606787_20979761) c_l_constraints(152)_ 1
      x(42606787_20979761) c_u_constraints(410)_ -239
      x(42606787_20979761) c_e_constraints(506)_ -1
      x(42606787_42606791) objective 22.492999999999999
@@ -1218,11 +1234,13 @@ COLUMNS
      x(49626773_246692508) objective 124.39499999999998
      x(49626773_246692508) c_e_constraints(45)_ -1
      x(49626773_246692508) c_u_constraints(144)_ 1
+     x(49626773_246692508) c_l_constraints(152)_ 1
      x(49626773_246692508) c_u_constraints(428)_ -239
      x(49626773_246692508) c_e_constraints(506)_ -1
      x(49626773_246696320) objective 93.176000000000002
      x(49626773_246696320) c_e_constraints(45)_ -1
      x(49626773_246696320) c_u_constraints(143)_ 1
+     x(49626773_246696320) c_l_constraints(152)_ 1
      x(49626773_246696320) c_u_constraints(426)_ -239
      x(49626773_246696320) c_e_constraints(506)_ -1
      x(52922240_29603436) objective 101.79900000000001
@@ -1283,50 +1301,51 @@ COLUMNS
      x(118417191_29605007) objective 36.704999999999998
      x(118417191_29605007) c_e_constraints(50)_ -1
      x(118417191_29605007) c_u_constraints(128)_ 1
+     x(118417191_29605007) c_l_constraints(152)_ 1
      x(118417191_29605007) c_u_constraints(450)_ -239
      x(118417191_29605007) c_e_constraints(506)_ -1
      x(246692483_246692484) objective 45.319000000000003
      x(246692483_246692484) c_e_constraints(51)_ -1
      x(246692483_246692484) c_u_constraints(147)_ 1
-     x(246692483_246692484) c_l_constraints(152)_ 1
      x(246692483_246692484) c_u_constraints(454)_ -239
      x(246692483_246692484) c_e_constraints(506)_ -1
      x(246692484_29603320) objective 48.257000000000005
      x(246692484_29603320) c_e_constraints(52)_ -1
      x(246692484_29603320) c_u_constraints(88)_ 1
-     x(246692484_29603320) c_l_constraints(152)_ 1
      x(246692484_29603320) c_u_constraints(456)_ -239
      x(246692484_29603320) c_e_constraints(506)_ -1
      x(246692484_29604862) objective 90.388000000000005
      x(246692484_29604862) c_e_constraints(52)_ -1
      x(246692484_29604862) c_u_constraints(107)_ 1
-     x(246692484_29604862) c_l_constraints(152)_ 1
      x(246692484_29604862) c_u_constraints(458)_ -239
      x(246692484_29604862) c_e_constraints(506)_ -1
      x(246692484_246692483) objective 45.319000000000003
      x(246692484_246692483) c_e_constraints(52)_ -1
      x(246692484_246692483) c_u_constraints(147)_ 1
-     x(246692484_246692483) c_l_constraints(152)_ 1
      x(246692484_246692483) c_u_constraints(460)_ -239
      x(246692484_246692483) c_e_constraints(506)_ -1
      x(246692508_24959516) objective 49.325000000000003
      x(246692508_24959516) c_e_constraints(53)_ -1
      x(246692508_24959516) c_u_constraints(73)_ 1
+     x(246692508_24959516) c_l_constraints(152)_ 1
      x(246692508_24959516) c_u_constraints(462)_ -239
      x(246692508_24959516) c_e_constraints(506)_ -1
      x(246692508_29604864) objective 91.445999999999998
      x(246692508_29604864) c_e_constraints(53)_ -1
      x(246692508_29604864) c_u_constraints(111)_ 1
+     x(246692508_29604864) c_l_constraints(152)_ 1
      x(246692508_29604864) c_u_constraints(464)_ -239
      x(246692508_29604864) c_e_constraints(506)_ -1
      x(246692508_49626773) objective 124.39499999999998
      x(246692508_49626773) c_e_constraints(53)_ -1
      x(246692508_49626773) c_u_constraints(144)_ 1
+     x(246692508_49626773) c_l_constraints(152)_ 1
      x(246692508_49626773) c_u_constraints(466)_ -239
      x(246692508_49626773) c_e_constraints(506)_ -1
      x(246693663_246693686) objective 85.954999999999998
      x(246693663_246693686) c_e_constraints(54)_ -1
      x(246693663_246693686) c_u_constraints(148)_ 1
+     x(246693663_246693686) c_l_constraints(152)_ 1
      x(246693663_246693686) c_u_constraints(468)_ -239
      x(246693663_246693686) c_e_constraints(506)_ -1
      x(246693663_1553140355) objective 66.888999999999996
@@ -1337,6 +1356,7 @@ COLUMNS
      x(246693686_24959516) objective 58.384999999999998
      x(246693686_24959516) c_e_constraints(55)_ -1
      x(246693686_24959516) c_u_constraints(74)_ 1
+     x(246693686_24959516) c_l_constraints(152)_ 1
      x(246693686_24959516) c_u_constraints(472)_ -239
      x(246693686_24959516) c_e_constraints(506)_ -1
      x(246693686_29603262) objective 68.018000000000001
@@ -1348,11 +1368,13 @@ COLUMNS
      x(246693686_246693663) objective 85.954999999999998
      x(246693686_246693663) c_e_constraints(55)_ -1
      x(246693686_246693663) c_u_constraints(148)_ 1
+     x(246693686_246693663) c_l_constraints(152)_ 1
      x(246693686_246693663) c_u_constraints(476)_ -239
      x(246693686_246693663) c_e_constraints(506)_ -1
      x(246696320_49626773) objective 93.176000000000002
      x(246696320_49626773) c_e_constraints(56)_ -1
      x(246696320_49626773) c_u_constraints(143)_ 1
+     x(246696320_49626773) c_l_constraints(152)_ 1
      x(246696320_49626773) c_u_constraints(478)_ -239
      x(246696320_49626773) c_e_constraints(506)_ -1
      x(253937384_29603223) objective 71.757000000000005
@@ -1388,7 +1410,6 @@ COLUMNS
      x(280889321_29603320) objective 75
      x(280889321_29603320) c_e_constraints(59)_ -1
      x(280889321_29603320) c_u_constraints(89)_ 1
-     x(280889321_29603320) c_l_constraints(152)_ 1
      x(280889321_29603320) c_u_constraints(492)_ -239
      x(280889321_29603320) c_e_constraints(506)_ -1
      x(878180300_26240542) objective 80.960999999999999
@@ -1410,7 +1431,6 @@ COLUMNS
      x(3476893233_29689427) objective 53.370000000000005
      x(3476893233_29689427) c_e_constraints(62)_ -1
      x(3476893233_29689427) c_u_constraints(138)_ 1
-     x(3476893233_29689427) c_l_constraints(152)_ 1
      x(3476893233_29689427) c_u_constraints(500)_ -239
      x(3476893233_29689427) c_e_constraints(506)_ -1
      x(6532307725_253937384) objective 75.742999999999995
@@ -2127,9 +2147,9 @@ COLUMNS
      y(6532307725_253937395) c_e_constraints(63)_ -1
      y(6532307725_253937395) c_l_constraints(503)_ 1
      y(6532307725_253937395) c_u_constraints(504)_ 1
-     yT(29604750) c_e_constraints(12)_ 1
-     yT(29604750) c_e_constraints(505)_ 1
-     yT(29604750) c_e_constraints(506)_ 1
+     yT(29689374) c_e_constraints(34)_ 1
+     yT(29689374) c_e_constraints(505)_ 1
+     yT(29689374) c_e_constraints(506)_ 1
      z c_e_constraints(505)_ 1
 RHS
      RHS c_e_constraints(1)_ 0
@@ -3167,8 +3187,8 @@ BOUNDS
  UI BOUND y(6532307725_253937384) 10E20
  LI BOUND y(6532307725_253937395) -10E20
  UI BOUND y(6532307725_253937395) 10E20
- LI BOUND yT(29604750) -10E20
- UI BOUND yT(29604750) 10E20
+ LI BOUND yT(29689374) -10E20
+ UI BOUND yT(29689374) 10E20
  LI BOUND z -10E20
  UI BOUND z 10E20
 ENDATA

@@ -3,6 +3,10 @@ import random
 from typing import Union
 import pyomo.environ as pyo
 import networkx as nx
+try:
+    from importlib.resources import open_text
+except ImportError:
+    from importlib_resources import open_text
 
 from discretenet.problem import Problem
 from discretenet.generator import Generator
@@ -128,9 +132,8 @@ class GISPGenerator(Generator):
             )
         else:
             self.dimacs_to_nx()
-            instance_name = self.graph_instance.split("/")[1]
             self.name = "%s_%s_%g_%g" % (
-                instance_name,
+                self.graph_instance,
                 self.which_set,
                 self.alpha,
                 self.set_param,
@@ -138,7 +141,7 @@ class GISPGenerator(Generator):
 
     def dimacs_to_nx(self):
         g = nx.Graph()
-        with open(self.graph_instance, "r") as f:
+        with open_text("discretenet.problems.gisp.graphs", self.graph_instance) as f:
             for line in f:
                 arr = line.split()
                 if line[0] == "e":
@@ -158,11 +161,9 @@ class GISPGenerator(Generator):
     def generate(self):
         """
         Generate and return a single :class:`discretenet.problem.Problem` instance
-
         Should sample for parameters from the defined parameter generator callables
         (from the ``__init__()`` method), instantiate an instance with those parameters,
         and return it.
-
         :return: An initialized concrete ``Problem`` instance
         """
 
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         random_seed=1,
         path_prefix="easy",
         which_set="SET2",
-        graph_instance="graphs/C125.9.clq",
+        graph_instance="C125.9.clq",
         set_param=100.0,
         alpha=0.75,
     )
