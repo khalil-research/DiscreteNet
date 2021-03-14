@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+from typing import Union
 
 import pyomo.environ as pyo
 import numpy as np
@@ -16,16 +17,24 @@ class FakeProblem(Problem):
 
     is_linear = True
 
-    def __init__(self, obj_coeffs: np.array, constr_coeffs: np.array):
+    def __init__(
+        self, obj_coeffs: Union[np.array, list], constr_coeffs: Union[np.array, list]
+    ):
         super().__init__()
         self.n = len(obj_coeffs)
-        self.obj_coeffs = obj_coeffs
-        self.constr_coeffs = constr_coeffs
+        self.obj_coeffs = np.array(obj_coeffs)
+        self.constr_coeffs = np.array(constr_coeffs)
 
         self.model = pyo.ConcreteModel()
 
     def get_name(self):
         return f"fake_problem_{self.n}"
+
+    def get_parameters(self):
+        return {
+            "obj_coeffs": self.obj_coeffs.tolist(),
+            "constr_coeffs": self.constr_coeffs.tolist(),
+        }
 
 
 class FakeGenerator(Generator[FakeProblem]):
@@ -48,6 +57,9 @@ class MockProblem(Problem):
 
     def get_name(self):
         return "mock_problem"
+
+    def get_parameters(self):
+        return {}
 
 
 class MockGenerator(Generator[MockProblem]):
