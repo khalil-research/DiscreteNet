@@ -316,13 +316,7 @@ class Problem(ABC):
                 if (data["type"] == "variable" and data["domain"] == "integer")
             ]
         )
-        features["num_continuous_variables"] = len(
-            [
-                name
-                for name, data in vcg.nodes(data=True)
-                if (data["type"] == "variable" and data["domain"] == "continuous")
-            ]
-        )
+        features["num_continuous_variables"] = len(continuous_variable_nodes)
         features["num_non_continuous_variables"] = (
             features["num_binary_variables"] + features["num_integer_variables"]
         )
