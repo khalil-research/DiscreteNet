@@ -4,6 +4,7 @@ from pathlib import Path
 
 from joblib import Parallel, delayed
 import numpy as np
+import random
 
 from discretenet.problem import Problem
 
@@ -55,7 +56,7 @@ class Generator(Generic[T]):
         :param seed: The random seed to use
         """
         self.random_seed = seed
-
+        random.seed(self.random_seed)
         np.random.seed(self.random_seed)
 
     @abstractmethod

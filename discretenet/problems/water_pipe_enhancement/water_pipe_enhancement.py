@@ -3,6 +3,7 @@ import numpy.random as random
 from typing import Union
 import pyomo.environ as pyo
 import networkx as nx
+
 try:
     from importlib.resources import open_binary
 except ImportError:
@@ -14,8 +15,10 @@ from discretenet.generator import Generator
 
 
 class WaterPipeEnhancementProblem(Problem):
+    is_linear = True
+
     def __init__(self, graph, undirected_graph, SR, C, T, name):
-        self.model = None
+        super().__init__()
         self.graph = graph
         self.undirected_graph = undirected_graph
         self.SR = SR
@@ -79,8 +82,8 @@ class WaterPipeEnhancementProblem(Problem):
             cleaned_Sr = set()
             for node1, node2 in Sr:
                 if (node1, node2) not in cleaned_Sr and (
-                        node2,
-                        node1,
+                    node2,
+                    node1,
                 ) not in cleaned_Sr:
                     cleaned_Sr.add((node1, node2))
             model.constraints.add(
@@ -115,50 +118,37 @@ class WaterPipeEnhancementProblem(Problem):
 
         self.model = model
 
-    def is_linear(self) -> bool:
-        """
-        Boolean indicating if the model objective and constraints are linear.
-
-        Must be set when creating a concrete problem class. ::
-
-            class MyProblem(Problem):
-                is_linear = True
-
-                ...
-        """
-        return True
-
     def get_name(self) -> str:
-        """
-        Return a string name for the model instance, based on problem parameters
-
-        Use for saving parts of the model, but most not include path or extension.
-
-        :return: Model instance name
-        """
         return self.name
 
+    def get_parameters(self):
+        # to be implemented
+        return None
 
-class WaterPipeEnhancementGenerator(Generator):
+
+class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
     def __init__(
-            self,
-            random_seed: int = 42,
-            path_prefix: Union[str, Path] = None,
-            graph_instance="small_toronto",
-            housing_area_rate=0.01,
-            housing_area_size=3,
-            critical_rate=0.01,
-            water_source_rate=0.005,
+        self,
+        random_seed: int = 42,
+        path_prefix: Union[str, Path] = None,
+        graph_instance="small_toronto",
+        housing_area_rate=0.01,
+        housing_area_size=3,
+        critical_rate=0.01,
+        water_source_rate=0.005,
     ):
         """
-        Initialize the water pipe enhancement problem generator instance following https://doi.org/10.1145/3378393.3402246
+        Initialize the water pipe enhancement problem generator instance
+        following https://doi.org/10.1145/3378393.3402246
         :param random_seed: The random seed to use
         :param path_prefix:  Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
             to be changed by the user after generator instantiation if desired.
-        :param graph_instance: the name of the graph instance to use, the graphs are located under the graphs directory
+        :param graph_instance: the name of the graph instance to use,
+            the graphs are located under the graphs directory
         :param housing_area_rate: percentage of nodes that are center of housing areas
-        :param housing_area_size: use k-hop neighbours to define each neighbourhood, k = r_size
+        :param housing_area_size: use k-hop neighbours to define each neighbourhood,
+            k = r_size
         :param critical_rate: percentage of nodes that are critical customers
         :param water_source_rate: percentage of nodes that are water sources
         """
@@ -172,15 +162,17 @@ class WaterPipeEnhancementGenerator(Generator):
         self.C = None
         self.T = None
         self.name = None
+        self.graph = None
 
         with open_binary(
             "discretenet.problems.water_pipe_enhancement.graphs",
-            f"{graph_instance}.gpickle"
+            f"{graph_instance}.gpickle",
         ) as fd:
-            self.graph = pickle.load(fd)
-        self.undirected_graph = self.graph.to_undirected()
+            self.base_graph = pickle.load(fd)
 
     def generate(self):
+        self.graph = self.base_graph.copy()
+        self.undirected_graph = self.graph.to_undirected()
 
         self.generateCTR()
         self.name = "{}_RR{}_rS{}_CR{}_TR{}".format(

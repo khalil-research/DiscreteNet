@@ -8,7 +8,10 @@ from discretenet.generator import Generator
 
 
 class SchoolBusSchedulingProblem(Problem):
+    is_linear = True
+
     def __init__(self, all_time, schools, routes, time_window, name):
+        super().__init__()
         self.name = name
 
         model = pyo.ConcreteModel()
@@ -70,14 +73,15 @@ class SchoolBusSchedulingProblem(Problem):
         model.c5 = pyo.Constraint(model.T, rule=c5_rule)
         self.model = model
 
-    def is_linear(self):
-        return True
-
     def get_name(self):
         return self.name
 
+    def get_parameters(self):
+        # to be implemented
+        return None
 
-class SchoolBusSchedulingGenerator(Generator):
+
+class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
     def __init__(
         self,
         random_seed: int = 42,
@@ -91,14 +95,16 @@ class SchoolBusSchedulingGenerator(Generator):
         route_length_std=10,
     ):
         """
-        Initialize the school bus scheduling problem generator instance following https://arxiv.org/abs/1803.09040v2
+        Initialize the school bus scheduling problem generator instance
+        following https://arxiv.org/abs/1803.09040v2
         :param random_seed: The random seed to use
         :param path_prefix: Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
             to be changed by the user after generator instantiation if desired.
         :param num_routes: number of bus routes per school
         :param max_time: total number of time slots ex: 120 for 2 hours
-        :param school_start_interval: school start time intervals ex: 10 for 10, 20, 30 ... (Not implemented)
+        :param school_start_interval: school start time intervals
+            ex: 10 for 10, 20, 30 ... (Not implemented)
         :param num_schools: number of schools
         :param time_window: time window of acceptable bus arrival time
         :param route_length_avg: average route length (time)
