@@ -32,7 +32,7 @@ class Problem(ABC):
         pass
 
     @abstractmethod
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         """
         Generate a concrete Pyomo model of the problem
 
