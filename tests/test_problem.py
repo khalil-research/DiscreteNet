@@ -1,8 +1,10 @@
 from unittest.mock import MagicMock
 import pytest
+from typing import Union
 
-import pyomo.environ as pyo
 import networkx as nx
+import numpy as np
+import pyomo.environ as pyo
 
 from discretenet.problem import Problem
 
@@ -93,6 +95,53 @@ class NonlinearProblem(Problem):
 
     def get_parameters(self):
         return {}
+
+
+class ProblemWithParameters(Problem):
+    """
+    A simple problem with parameters
+    """
+
+    is_linear = True
+
+    def __init__(
+        self, constr_coeffs: Union[np.array, list], obj_coeffs: Union[np.array, list]
+    ):
+        super().__init__()
+        self.n = len(constr_coeffs)
+        self.constr_coeffs = np.array(constr_coeffs)
+        self.obj_coeffs = np.array(obj_coeffs)
+
+        self.model = pyo.ConcreteModel()
+
+        self.model.x = pyo.Var(list(range(self.n)), domain=pyo.Reals)
+        self.model.constr1 = pyo.Constraint(
+            expr=pyo.quicksum(
+                self.model.x[i] * self.constr_coeffs[i] for i in range(self.n)
+            )
+            <= 10
+        )
+
+        self.model.objective = pyo.Objective(
+            expr=pyo.quicksum(
+                self.model.x[i] * self.obj_coeffs[i] for i in range(self.n)
+            ),
+            sense=pyo.minimize,
+        )
+
+    def get_name(self):
+        return f"problem_with_params_{self.n}"
+
+    def get_parameters(self):
+        return {
+            "obj_coeffs": self.obj_coeffs,
+            "constr_coeffs": self.constr_coeffs,
+        }
+
+    def __eq__(self, other: "ProblemWithParameters"):
+        return np.all(self.constr_coeffs == other.constr_coeffs) and np.all(
+            self.obj_coeffs == other.obj_coeffs
+        )
 
 
 @pytest.fixture
@@ -205,7 +254,7 @@ class TestSavingLoading:
 
         problem.model.write.assert_called_with(str(tmp_path / "mock_problem.mps"))
 
-        params_path = tmp_path / "mock_problem_parameters.json"
+        params_path = tmp_path / "mock_problem_parameters.pkl"
         assert not params_path.exists()
 
         features_path = tmp_path / "mock_problem_features.json"
@@ -222,8 +271,21 @@ class TestSavingLoading:
         problem = LinearProblem()
         problem.save(tmp_path, model_only=False)
 
-        params_path = tmp_path / "linear_problem_parameters.json"
+        params_path = tmp_path / "linear_problem_parameters.pkl"
         assert params_path.exists()
 
         features_path = tmp_path / "linear_problem_features.json"
         assert features_path.exists()
+
+    def test_load_from_saved_params(self, tmp_path):
+        constr_coeffs = list(range(1, 6))
+        obj_coeffs = list(range(5, 10))
+        original_problem = ProblemWithParameters(
+            constr_coeffs=constr_coeffs, obj_coeffs=obj_coeffs
+        )
+        original_problem.save(tmp_path, model_only=False)
+
+        params_path = tmp_path / "problem_with_params_5_parameters.pkl"
+
+        loaded_problem = Problem.from_params(ProblemWithParameters, params_path)
+        assert loaded_problem == original_problem
