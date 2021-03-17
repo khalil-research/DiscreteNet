@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import json
 from pathlib import Path
 import pickle
-from typing import Dict, Union, Type, TypeVar
+from typing import Any, Dict, Union, Type, TypeVar
 
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
@@ -32,12 +32,15 @@ class Problem(ABC):
         pass
 
     @abstractmethod
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Generate a concrete Pyomo model of the problem
 
         By the end of initialization, the model must be stored in ``self.model``.
         The model objective must be stored in ``self.model.objective``.
+
+        There should be no randomness in model initialization - given the
+        same parameters, an identical model should be created.
 
         After initialization, the model is assumed to be immutable.
         """
@@ -57,16 +60,12 @@ class Problem(ABC):
         pass
 
     @abstractmethod
-    def get_parameters(self) -> Dict[str, Union[str, float, int, bool]]:
+    def get_parameters(self) -> Dict[str, Any]:
         """
         Return a dictionary of parameters used to construct the instance
 
         It should be possible to re-initialize an identical instance by passing
-        these parameters to the :meth:`~__init__` method (subject to random
-        state).
-
-        Parameters must be JSON-serializable by default. If not, override
-        the :meth:`save` method to save them differently.
+        these parameters to the :meth:`~__init__` method.
 
         :return: A dictionary of problem parameters
         """
@@ -350,12 +349,18 @@ class Problem(ABC):
             else:
                 feature_prefix = f"vcg_{variable_type}_variable_node_degree"
 
-            features[f"{feature_prefix}_mean"] = np.mean(degrees)
-            features[f"{feature_prefix}_median"] = np.median(degrees)
-            features[f"{feature_prefix}_cv"] = variation(degrees)
-            features[f"{feature_prefix}_p90p10"] = np.percentile(
-                degrees, 90
-            ) / np.percentile(degrees, 10)
+            if degrees:
+                features[f"{feature_prefix}_mean"] = np.mean(degrees)
+                features[f"{feature_prefix}_median"] = np.median(degrees)
+                features[f"{feature_prefix}_cv"] = variation(degrees)
+                features[f"{feature_prefix}_p90p10"] = np.percentile(
+                    degrees, 90
+                ) / np.percentile(degrees, 10)
+            else:
+                features[f"{feature_prefix}_mean"] = 0.0
+                features[f"{feature_prefix}_median"] = 0.0
+                features[f"{feature_prefix}_cv"] = 0.0
+                features[f"{feature_prefix}_p90p10"] = 0.0
 
         # VCG Constraint Node Degree Statistics - computed with respect to
         # all, only continuous, and only non-continuous variables. This is
@@ -386,12 +391,18 @@ class Problem(ABC):
             else:
                 feature_prefix = f"vcg_{variable_type}_constraint_node_degree"
 
-            features[f"{feature_prefix}_mean"] = np.mean(degrees)
-            features[f"{feature_prefix}_median"] = np.median(degrees)
-            features[f"{feature_prefix}_cv"] = variation(degrees)
-            features[f"{feature_prefix}_p90p10"] = np.percentile(
-                degrees, 90
-            ) / np.percentile(degrees, 10)
+            if degrees:
+                features[f"{feature_prefix}_mean"] = np.mean(degrees)
+                features[f"{feature_prefix}_median"] = np.median(degrees)
+                features[f"{feature_prefix}_cv"] = variation(degrees)
+                features[f"{feature_prefix}_p90p10"] = np.percentile(
+                    degrees, 90
+                ) / np.percentile(degrees, 10)
+            else:
+                features[f"{feature_prefix}_mean"] = 0.0
+                features[f"{feature_prefix}_median"] = 0.0
+                features[f"{feature_prefix}_cv"] = 0.0
+                features[f"{feature_prefix}_p90p10"] = 0.0
 
         # Variable coefficient statistics
         for variable_type, nodes in [
@@ -412,8 +423,12 @@ class Problem(ABC):
             else:
                 feature_prefix = f"{variable_type}_variable_coefficient_sum"
 
-            features[f"{feature_prefix}_mean"] = np.mean(coefficient_sums)
-            features[f"{feature_prefix}_cv"] = variation(coefficient_sums)
+            if coefficient_sums:
+                features[f"{feature_prefix}_mean"] = np.mean(coefficient_sums)
+                features[f"{feature_prefix}_cv"] = variation(coefficient_sums)
+            else:
+                features[f"{feature_prefix}_mean"] = 0.0
+                features[f"{feature_prefix}_cv"] = 0.0
 
         # Constraint coefficient statistics - only for linear constraints
         for variable_type, nodes_to_remove in [
@@ -442,8 +457,12 @@ class Problem(ABC):
             else:
                 feature_prefix = f"{variable_type}_constraint_coefficient_sum"
 
-            features[f"{feature_prefix}_mean"] = np.mean(coefficient_sums)
-            features[f"{feature_prefix}_cv"] = variation(coefficient_sums)
+            if coefficient_sums:
+                features[f"{feature_prefix}_mean"] = np.mean(coefficient_sums)
+                features[f"{feature_prefix}_cv"] = variation(coefficient_sums)
+            else:
+                features[f"{feature_prefix}_mean"] = 0.0
+                features[f"{feature_prefix}_cv"] = 0.0
 
         # Distribution of normalized constraint variable coefficients
         for variable_type, nodes in [
@@ -472,8 +491,12 @@ class Problem(ABC):
 
                     normalized_coeffs.append(data["coeff"] / constraint_bound)
 
-            features[f"{feature_prefix}_mean"] = np.mean(normalized_coeffs)
-            features[f"{feature_prefix}_cv"] = variation(normalized_coeffs)
+            if normalized_coeffs:
+                features[f"{feature_prefix}_mean"] = np.mean(normalized_coeffs)
+                features[f"{feature_prefix}_cv"] = variation(normalized_coeffs)
+            else:
+                features[f"{feature_prefix}_mean"] = 0.0
+                features[f"{feature_prefix}_cv"] = 0.0
 
         # Objective function features
         is_objective_linear, objective_var_list = decompose_term(
@@ -507,7 +530,7 @@ class Problem(ABC):
 
             coeffs = [coeff for coeff, var in coeff_data]
 
-            if len(coeffs) > 0:
+            if coeffs:
                 features[f"{feature_prefix}_mean"] = float(np.mean(coeffs))
                 features[f"{feature_prefix}_stddev"] = float(np.std(coeffs))
             else:
@@ -536,7 +559,7 @@ class Problem(ABC):
 
                 coeffs.append(coeff / num_constraints)
 
-            if len(coeffs) > 0:
+            if coeffs:
                 features[f"{feature_prefix}_mean"] = float(np.mean(coeffs))
                 features[f"{feature_prefix}_stddev"] = float(np.std(coeffs))
             else:
@@ -565,7 +588,7 @@ class Problem(ABC):
 
                 coeffs.append(coeff / np.sqrt(num_constraints))
 
-            if len(coeffs) > 0:
+            if coeffs:
                 features[f"{feature_prefix}_mean"] = float(np.mean(coeffs))
                 features[f"{feature_prefix}_stddev"] = float(np.std(coeffs))
             else:
@@ -580,11 +603,19 @@ class Problem(ABC):
             data["bound"] for name, data in constraint_nodes if data["kind"] == "eq"
         ]
 
-        features["leq_constraint_bounds_mean"] = np.mean(leq_constraint_bounds)
-        features["leq_constraint_bounds_stddev"] = np.std(leq_constraint_bounds)
-        features["eq_constraint_bounds_mean"] = np.mean(eq_constraint_bounds)
-        features["eq_constraint_bonds_stddev"] = np.std(eq_constraint_bounds)
+        if leq_constraint_bounds:
+            features["leq_constraint_bounds_mean"] = np.mean(leq_constraint_bounds)
+            features["leq_constraint_bounds_stddev"] = np.std(leq_constraint_bounds)
+        else:
+            features["leq_constraint_bounds_mean"] = 0.0
+            features["leq_constraint_bounds_stddev"] = 0.0
 
+        if eq_constraint_bounds:
+            features["eq_constraint_bounds_mean"] = np.mean(eq_constraint_bounds)
+            features["eq_constraint_bonds_stddev"] = np.std(eq_constraint_bounds)
+        else:
+            features["eq_constraint_bounds_mean"] = 0.0
+            features["eq_constraint_bonds_stddev"] = 0.0
         return features
 
     @staticmethod
@@ -786,12 +817,14 @@ class Problem(ABC):
 
             filename = path_prefix.joinpath(filename)
 
+        filename = Path(filename)
+
         if not filename.parent.exists():
             filename.parent.mkdir(parents=True)
 
         return str(filename)
 
-    def save(self, path_prefix: Union[str, Path] = None, model_only=True) -> None:
+    def save(self, path_prefix: Union[Path, str] = None, model_only=True) -> None:
         """
         Save the associated model, problem parameters, and problem features
 
@@ -813,14 +846,14 @@ class Problem(ABC):
 
         if not model_only:
             params_filename = self.__build_full_path(
-                ".json", path_prefix, extra_params="_parameters"
+                ".pkl", path_prefix, extra_params="_parameters"
             )
             features_filename = self.__build_full_path(
                 ".json", path_prefix, extra_params="_features"
             )
 
-            with open(params_filename, "w+") as fd:
-                json.dump(self.get_parameters(), fd)
+            with open(params_filename, "wb+") as fd:
+                pickle.dump(self.get_parameters(), fd)
 
             with open(features_filename, "w+") as fd:
                 json.dump(self.get_features(), fd)
@@ -828,7 +861,7 @@ class Problem(ABC):
     def save_graph(self, path_prefix: str = None) -> None:
         pass
 
-    def dump(self, path_prefix: Union[str, Path] = None) -> None:
+    def dump(self, path_prefix: Union[Path, str] = None) -> None:
         """
         Dump the entire :class:`Problem` instance as a pickle object
 
@@ -843,7 +876,7 @@ class Problem(ABC):
             pickle.dump(self, fd)
 
     @classmethod
-    def load(cls: Type[T], pkl_path: str) -> T:
+    def load(cls: Type[T], pkl_path: Union[Path, str]) -> T:
         """
         Load a problem instance from a pickle file saved by ``dump()``
 
@@ -855,3 +888,32 @@ class Problem(ABC):
             obj = pickle.load(fd)
 
         return obj
+
+    @staticmethod
+    def from_params(cls: Type[T], pkl_path: Union[Path, str]) -> T:
+        """
+        Instantiate a problem instance from the supplied
+        pickled arguments
+
+        Usage: ::
+            class MyProblem(Problem):
+                ...
+
+            my_problem = MyProblem(**kwargs)
+
+            my_problem.save(model_only=False)
+
+            ...
+
+            loaded_problem = Problem.from_params(MyProblem, "path_to_parameters.pkl")
+
+        :param cls: Class to instantiate. This is necessary due to
+            generic types being hints only in Python.
+        :param pkl_path: Path to pickle file
+        :return: Problem instance
+        """
+
+        with open(pkl_path, "rb") as fd:
+            params = pickle.load(fd)
+
+        return cls(**params)
