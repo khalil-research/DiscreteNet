@@ -1,6 +1,7 @@
-import numpy.random as random
 from pathlib import Path
 from typing import Union
+
+import numpy as np
 import pyomo.environ as pyo
 
 from discretenet.problem import Problem
@@ -10,8 +11,26 @@ from discretenet.generator import Generator
 class SchoolBusSchedulingProblem(Problem):
     is_linear = True
 
-    def __init__(self, all_time, schools, routes, time_window, name):
+    def __init__(
+        self, all_time: list, schools: list, routes: list, time_window: int, name: str
+    ):
+        """
+        Construct a concrete Pyomo model for a school bus scheduling problem instance
+        :param all_time: list of all possible time slots
+            (ex: 1,2,...,120 for 2 hours where each time slot is 1 minute)
+        :param schools: list of school ids
+        :param routes: a matrix of route lengths, each row represents a school,
+            each column represents a bus route for that school, with the value
+            representing the route length in time slots (ex 30 represents a
+            bus route that takes 30 minutes to complete)
+        :param time_window: school start time window
+        :param name: name of the instance
+        """
         super().__init__()
+        self.all_time = all_time
+        self.schools = schools
+        self.routes = routes
+        self.time_window = time_window
         self.name = name
 
         model = pyo.ConcreteModel()
@@ -88,7 +107,6 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
         path_prefix: Union[str, Path] = None,
         num_routes=6,
         max_time=120,
-        # school_start_interval=5,
         num_schools=5,
         time_window=20,
         route_length_avg=30,
@@ -103,8 +121,6 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
             to be changed by the user after generator instantiation if desired.
         :param num_routes: number of bus routes per school
         :param max_time: total number of time slots ex: 120 for 2 hours
-        :param school_start_interval: school start time intervals
-            ex: 10 for 10, 20, 30 ... (Not implemented)
         :param num_schools: number of schools
         :param time_window: time window of acceptable bus arrival time
         :param route_length_avg: average route length (time)
@@ -112,19 +128,11 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
         """
         super().__init__(random_seed, path_prefix)
         self.num_routes = num_routes
-        self.all_time = range(1, max_time)
-        # self.school_start_times = range(
-        #     school_start_interval,
-        #     max_time + school_start_interval,
-        #     school_start_interval,
-        # )
+        self.all_time = list(range(1, max_time))
         self.num_schools = num_schools
         self.route_length_avg = route_length_avg
         self.route_length_std = route_length_std
         self.time_window = time_window
-        self.schools = None
-        self.routes = None
-        self.route_ids = None
 
         self.name = "S{}_R{}_T{}_tw{}_ravg{}_rstd{}".format(
             num_schools,
@@ -136,12 +144,12 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
         )
 
     def generate(self):
-        self.generate_schools()
-        self.generate_routes()
+        schools = self.generate_schools()
+        routes = self.generate_routes(schools)
         problem = SchoolBusSchedulingProblem(
             self.all_time,
-            self.schools,
-            self.routes,
+            schools,
+            routes,
             self.time_window,
             self.name + "_%d" % self.random_seed,
         )
@@ -150,24 +158,21 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
     def generate_schools(self):
         """
         generate schools using num_schools. Keeping it simple for now,
-        later on we should utilize networkx and maybe osm
+        in the future we can utilize networkx and maybe osm
         """
-        self.schools = range(1, self.num_schools + 1)
+        return list(range(1, self.num_schools + 1))
 
-    def generate_routes(self):
+    def generate_routes(self, schools):
         routes = []
-        route_ids = []
-        for i, school in enumerate(self.schools):
+        for i, school in enumerate(schools):
             routes.append(
                 list(
-                    random.normal(
+                    np.random.normal(
                         self.route_length_avg, self.route_length_std, self.num_routes
                     ).astype(int)
                 )
             )
-            route_ids.append(list(range(1, len(routes[i]) + 1)))
-        self.routes = routes
-        self.route_ids = route_ids
+        return routes
 
 
 if __name__ == "__main__":
@@ -176,8 +181,7 @@ if __name__ == "__main__":
         path_prefix="easy",
         num_routes=3,
         max_time=120,
-        # school_start_interval=5,
-        num_schools=5,
+        num_schools=10,
         time_window=20,
         route_length_avg=30,
         route_length_std=10,

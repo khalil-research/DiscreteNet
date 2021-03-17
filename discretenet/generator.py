@@ -1,10 +1,10 @@
 from abc import abstractmethod
 from typing import Generic, List, TypeVar, Union
 from pathlib import Path
+import random
 
 from joblib import Parallel, delayed
 import numpy as np
-import random
 
 from discretenet.problem import Problem
 

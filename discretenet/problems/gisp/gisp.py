@@ -1,6 +1,7 @@
 from pathlib import Path
 import random
-from typing import Union
+from typing import Union, Optional
+
 import pyomo.environ as pyo
 import networkx as nx
 
@@ -16,14 +17,18 @@ from discretenet.generator import Generator
 class GISPProblem(Problem):
     is_linear = True
 
-    def __init__(self, graph, E2, name):
+    def __init__(self, graph: nx.graph, E2: list, name: str):
         """
-        Generate a concrete Pyomo model of the GISP problem
+        Construct a concrete Pyomo model for a Generalized Independent Set Problem
+        :param graph: undirected networkx graph, each node is associated with a revenue
+            and each edge is associated with a cost
+        :param E2: list of removable edges
+        :param name: name of the instance
         """
         super().__init__()
         self.name = name
         self.graph = graph
-        self.E2 = list(E2)
+        self.E2 = E2
 
         # create concrete pyomo model
         self.create_model()
@@ -78,16 +83,16 @@ class GISPGenerator(Generator[GISPProblem]):
         self,
         random_seed: int = 42,
         path_prefix: Union[str, Path] = None,
-        which_set="SET2",
-        graph_instance=None,
-        min_n=100,
-        max_n=100,
-        er_prob=0.1,
-        set_param=100.0,
-        alpha=0.75,
+        which_set: str = "SET2",
+        graph_instance: Optional[str] = None,
+        min_n: Optional[int] = 100,
+        max_n: Optional[int] = 100,
+        er_prob: Optional[float] = 0.1,
+        set_param: float = 100.0,
+        alpha: float = 0.75,
     ):
         """
-        Initialize the GISP generator instance
+        Initialize the Generalized Independent Set Problem generator instance
         following https://doi.org/10.1016/j.ejor.2016.11.050
         :param random_seed: The random seed to use
         :param path_prefix:  Path prefix to pass to instance ``save()`` methods
@@ -115,8 +120,6 @@ class GISPGenerator(Generator[GISPProblem]):
         self.er_prob = er_prob
         self.set_param = set_param
         self.alpha = alpha
-        self.E2 = set()
-        self.graph = None
 
         if self.graph_instance is None:
             # Generate random graph
@@ -126,7 +129,7 @@ class GISPGenerator(Generator[GISPProblem]):
             )
             self.name = "er_n=%d_m=%d_p=%.2f_%s_setparam=%.2f_alpha=%.2f" % (
                 num_nodes,
-                nx.number_of_edges(self.graph),
+                nx.number_of_edges(self.base_graph),
                 self.er_prob,
                 self.which_set,
                 self.set_param,
@@ -151,49 +154,41 @@ class GISPGenerator(Generator[GISPProblem]):
         self.base_graph = g
 
     def generate(self):
-        """
-        Generate and return a single :class:`discretenet.problem.Problem` instance
-        Should sample for parameters from the defined parameter generator callables
-        (from the ``__init__()`` method), instantiate an instance with those parameters,
-        and return it.
-        :return: An initialized concrete ``Problem`` instance
-        """
         # create a copy of the graph to randomize
-        self.graph = self.base_graph.copy()
+        graph = self.base_graph.copy()
 
         # Generate node revenues and edge costs
-        self.generate_revs_costs()
+        graph = self.generate_revs_costs(graph)
 
         # Generate the set of removable edges
-        self.generate_E2()
+        E2 = self.generate_E2(graph)
 
         # Construct Problem
-        problem = GISPProblem(self.graph, self.E2, self.name + "_%d" % self.random_seed)
-
-        # Update seed
-        self.set_seed(self.random_seed + 1)
+        problem = GISPProblem(graph, E2, self.name + "_%d" % self.random_seed)
 
         return problem
 
-    def generate_revs_costs(self):
+    def generate_revs_costs(self, graph):
         if self.which_set == "SET1":
-            for node in self.graph.nodes():
-                self.graph.nodes[node]["revenue"] = random.randint(1, 100)
-            for u, v, edge in self.graph.edges(data=True):
+            for node in graph.nodes():
+                graph.nodes[node]["revenue"] = random.randint(1, 100)
+            for u, v, edge in graph.edges(data=True):
                 edge["cost"] = (
-                    self.graph.node[u]["revenue"] + self.graph.node[v]["revenue"]
+                    graph.nodes[u]["revenue"] + graph.nodes[v]["revenue"]
                 ) / float(self.set_param)
         elif self.which_set == "SET2":
-            for node in self.graph.nodes():
-                self.graph.nodes[node]["revenue"] = float(self.set_param)
-            for u, v, edge in self.graph.edges(data=True):
+            for node in graph.nodes():
+                graph.nodes[node]["revenue"] = float(self.set_param)
+            for u, v, edge in graph.edges(data=True):
                 edge["cost"] = 1.0
+        return graph
 
-    def generate_E2(self):
-        self.E2 = set()
-        for edge in self.graph.edges():
+    def generate_E2(self, graph):
+        E2 = []
+        for edge in graph.edges():
             if random.random() <= self.alpha:
-                self.E2.add(edge)
+                E2.append(edge)
+        return E2
 
 
 if __name__ == "__main__":
@@ -207,7 +202,7 @@ if __name__ == "__main__":
     #     set_param=100.0,
     #     alpha=0.75
     # )
-    # generator(5, 1)
+    # generator(1, 1)
 
     generator_existing_graph = GISPGenerator(
         random_seed=1,
@@ -215,6 +210,6 @@ if __name__ == "__main__":
         which_set="SET2",
         graph_instance="C125.9.clq",
         set_param=100.0,
-        alpha=0.75,
+        alpha=0.60,
     )
-    generator_existing_graph(2, 1)
+    generator_existing_graph(1, 1)

@@ -1,8 +1,9 @@
-import random
 from pathlib import Path
+import random
 from typing import Union
-import pyomo.environ as pyo
+
 import networkx as nx
+import pyomo.environ as pyo
 
 from discretenet.problem import Problem
 from discretenet.generator import Generator
@@ -11,14 +12,29 @@ from discretenet.generator import Generator
 class FCMNFProblem(Problem):
     is_linear = True
 
-    def __init__(self, g, num_commodities, od_list, name):
+    def __init__(
+        self, graph: nx.DiGraph, num_commodities: int, od_list: list, name: str
+    ):
+        """
+        Construct a concrete Pyomo model for a
+        Fixed-charge Multi-commodity Network Flow Problem
+        :param graph: a directed networkx graph where each edge has
+            an associated fixed cost, variable cost and a cap
+        :param num_commodities: total number of commodities
+        :param od_list: list of tuples that contains the commodities information,
+            specifically, each commodity is defined as (origin, destination, quantity)
+        :param name: name of the instance
+        """
         super().__init__()
+        self.graph = graph
+        self.num_commodities = num_commodities
+        self.od_list = od_list
         self.name = name
 
         model = pyo.ConcreteModel()
 
         # initialize variables and coefficients
-        model.edges = pyo.Set(initialize=list(g.edges()))
+        model.edges = pyo.Set(initialize=list(graph.edges()))
         model.K = pyo.Set(initialize=range(num_commodities))
 
         def DK_init(m):
@@ -33,7 +49,7 @@ class FCMNFProblem(Problem):
         pyo.Objective(
             expr=pyo.quicksum(
                 edge["length"] * model.x[node1, node2]
-                for node1, node2, edge in g.edges(data=True)
+                for node1, node2, edge in graph.edges(data=True)
             ),
             sense=pyo.minimize,
         )
@@ -41,12 +57,12 @@ class FCMNFProblem(Problem):
         model.objective = pyo.Objective(
             expr=pyo.quicksum(
                 edge["fixed_cost"] * model.y[node1, node2]
-                for node1, node2, edge in g.edges(data=True)
+                for node1, node2, edge in graph.edges(data=True)
             )
             + pyo.quicksum(
                 pyo.quicksum(
                     edge["var_cost"] * od_list[k][2] * model.x[node1, node2, k]
-                    for node1, node2, edge in g.edges(data=True)
+                    for node1, node2, edge in graph.edges(data=True)
                 )
                 for k in range(num_commodities)
             ),
@@ -56,7 +72,7 @@ class FCMNFProblem(Problem):
         model.constraint1 = pyo.ConstraintList()
         # constraint 1
         for k in range(num_commodities):
-            for node in g.nodes():
+            for node in graph.nodes():
                 rhs = 0.0
                 if od_list[k][0] == node:
                     rhs = 1.0
@@ -64,11 +80,12 @@ class FCMNFProblem(Problem):
                     rhs = -1.0
                 model.constraint1.add(
                     pyo.quicksum(
-                        model.x[node, successor, k] for successor in g.successors(node)
+                        model.x[node, successor, k]
+                        for successor in graph.successors(node)
                     )
                     - pyo.quicksum(
                         model.x[predecessor, node, k]
-                        for predecessor in g.predecessors(node)
+                        for predecessor in graph.predecessors(node)
                     )
                     - rhs
                     == 0
@@ -76,7 +93,7 @@ class FCMNFProblem(Problem):
 
         model.constraint2 = pyo.ConstraintList()
         # constraint 2
-        for node1, node2, edge in g.edges(data=True):
+        for node1, node2, edge in graph.edges(data=True):
             model.constraint2.add(
                 pyo.quicksum(
                     od_list[k][2] * model.x[node1, node2, k]
@@ -101,16 +118,16 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
         self,
         random_seed: int = 42,
         path_prefix: Union[str, Path] = None,
-        min_n=100,
-        max_n=100,
-        er_prob=0.1,
-        variable_costs_range_lower=11,
-        variable_costs_range_upper=50,
-        commodities_quantities_range_lower=10,
-        commodities_quantities_range_upper=100,
-        fixed_to_variable_ratio=100,
-        edge_upper=200,
-        num_commodities=200,
+        min_n: int = 100,
+        max_n: int = 100,
+        er_prob: float = 0.1,
+        variable_costs_range_lower: int = 11,
+        variable_costs_range_upper: int = 50,
+        commodities_quantities_range_lower: int = 10,
+        commodities_quantities_range_upper: int = 100,
+        fixed_to_variable_ratio: int = 100,
+        edge_upper: int = 200,
+        num_commodities: int = 200,
     ):
         """
         Initialize the Fixed-charge Multi-commodity Network Flow Problem
@@ -143,35 +160,40 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
         )
         self.edge_upper = edge_upper
         self.num_commodities = num_commodities
-        self.od_list = None
-        self.graph = None
 
         # Generate random graph
         num_nodes = random.randint(min_n, max_n)
         self.base_graph = nx.erdos_renyi_graph(
             n=num_nodes, p=er_prob, seed=self.random_seed, directed=True
         )
-        self.name = "er_n=%d_m=%d_p=%.2f" % (
+        self.name = "nc{}_er_n{}_m{}_p{}_vcr{}_{}_cqr{}_{}_fvr{}_eu{}".format(
+            num_commodities,
             num_nodes,
             nx.number_of_edges(self.base_graph),
             er_prob,
+            variable_costs_range_lower,
+            variable_costs_range_upper,
+            commodities_quantities_range_lower,
+            commodities_quantities_range_upper,
+            fixed_to_variable_ratio,
+            edge_upper,
         )
 
     def generate(self):
-        self.graph = self.base_graph.copy()
+        graph = self.base_graph.copy()
 
-        self.generate_random_vars()
+        od_list = self.generate_random_vars(graph)
         problem = FCMNFProblem(
-            self.graph,
+            graph,
             self.num_commodities,
-            self.od_list,
+            od_list,
             self.name + "_%d" % self.random_seed,
         )
         return problem
 
-    def generate_random_vars(self):
+    def generate_random_vars(self, graph):
 
-        for u, v, edge in self.graph.edges(data=True):
+        for u, v, edge in graph.edges(data=True):
             edge["var_cost"] = random.randint(
                 self.variable_costs_range_lower, self.variable_costs_range_upper
             )
@@ -184,10 +206,10 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
             )
         # generate o-d pairs + quantity
         od_list = []
-        n = nx.number_of_nodes(self.graph)
+        n = nx.number_of_nodes(graph)
         while len(od_list) < self.num_commodities:
             i, j = random.randint(0, n - 1), random.randint(0, n - 1)
-            if i != j and nx.has_path(self.graph, i, j):
+            if i != j and nx.has_path(graph, i, j):
                 od_list += [
                     (
                         i,
@@ -199,15 +221,15 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
                     )
                 ]
 
-        self.od_list = od_list
+        return od_list
 
 
 if __name__ == "__main__":
     generator = FCMNFGenerator(
-        random_seed=0,
+        random_seed=1,
         path_prefix="easy",
-        min_n=100,
-        max_n=100,
+        min_n=70,
+        max_n=70,
         er_prob=0.1,
         variable_costs_range_lower=11,
         variable_costs_range_upper=50,
