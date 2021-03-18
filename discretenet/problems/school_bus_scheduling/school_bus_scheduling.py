@@ -16,6 +16,7 @@ class SchoolBusSchedulingProblem(Problem):
     ):
         """
         Construct a concrete Pyomo model for a school bus scheduling problem instance
+
         :param all_time: list of all possible time slots
             (ex: 1,2,...,120 for 2 hours where each time slot is 1 minute)
         :param schools: list of school ids
@@ -96,8 +97,13 @@ class SchoolBusSchedulingProblem(Problem):
         return self.name
 
     def get_parameters(self):
-        # to be implemented
-        return None
+        return {
+            "all_time": self.all_time,
+            "schools": self.schools,
+            "routes": self.routes,
+            "time_window": self.time_window,
+            "name": self.name,
+        }
 
 
 class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
@@ -115,6 +121,7 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
         """
         Initialize the school bus scheduling problem generator instance
         following https://arxiv.org/abs/1803.09040v2
+
         :param random_seed: The random seed to use
         :param path_prefix: Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
@@ -164,7 +171,7 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
 
     def generate_routes(self, schools):
         routes = []
-        for i, school in enumerate(schools):
+        for _ in schools:
             routes.append(
                 list(
                     np.random.normal(
@@ -178,7 +185,6 @@ class SchoolBusSchedulingGenerator(Generator[SchoolBusSchedulingProblem]):
 if __name__ == "__main__":
     generator = SchoolBusSchedulingGenerator(
         random_seed=1,
-        path_prefix="easy",
         num_routes=3,
         max_time=120,
         num_schools=10,

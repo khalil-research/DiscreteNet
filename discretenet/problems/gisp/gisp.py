@@ -20,15 +20,16 @@ class GISPProblem(Problem):
     def __init__(self, graph: nx.graph, E2: list, name: str):
         """
         Construct a concrete Pyomo model for a Generalized Independent Set Problem
+
         :param graph: undirected networkx graph, each node is associated with a revenue
             and each edge is associated with a cost
         :param E2: list of removable edges
         :param name: name of the instance
         """
         super().__init__()
-        self.name = name
         self.graph = graph
         self.E2 = E2
+        self.name = name
 
         # create concrete pyomo model
         self.create_model()
@@ -74,8 +75,11 @@ class GISPProblem(Problem):
         return self.name
 
     def get_parameters(self):
-        # to be implemented
-        return None
+        return {
+            "graph": self.graph,
+            "E2": self.E2,
+            "name": self.name,
+        }
 
 
 class GISPGenerator(Generator[GISPProblem]):
@@ -94,6 +98,7 @@ class GISPGenerator(Generator[GISPProblem]):
         """
         Initialize the Generalized Independent Set Problem generator instance
         following https://doi.org/10.1016/j.ejor.2016.11.050
+
         :param random_seed: The random seed to use
         :param path_prefix:  Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
@@ -192,21 +197,8 @@ class GISPGenerator(Generator[GISPProblem]):
 
 
 if __name__ == "__main__":
-    # generator = GISPGenerator(
-    #     random_seed=1,
-    #     path_prefix="easy",
-    #     which_set="SET2",
-    #     min_n=10,
-    #     max_n=100,
-    #     er_prob=0.1,
-    #     set_param=100.0,
-    #     alpha=0.75
-    # )
-    # generator(1, 1)
-
     generator_existing_graph = GISPGenerator(
         random_seed=1,
-        path_prefix="easy",
         which_set="SET2",
         graph_instance="C125.9.clq",
         set_param=100.0,

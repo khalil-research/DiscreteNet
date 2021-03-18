@@ -21,7 +21,6 @@ class WaterPipeEnhancementProblem(Problem):
     def __init__(
         self,
         graph: nx.MultiDiGraph,
-        undirected_graph: nx.MultiGraph,
         SR: list,
         C: list,
         T: list,
@@ -29,9 +28,9 @@ class WaterPipeEnhancementProblem(Problem):
     ):
         """
         Construct a concrete Pyomo model for a Water Pipe Enhancement Problem
+
         :param graph: directed networkx graph, each edge represents a section of a road
             and is associated with a length representing its enhancement cost
-        :param undirected_graph: undirected version of graph
         :param SR: list of sets of edges representing residential areas
         :param C: list of nodes that are critical customers
         :param T: list of nodes that are water sources
@@ -39,11 +38,11 @@ class WaterPipeEnhancementProblem(Problem):
         """
         super().__init__()
         self.graph = graph
-        self.undirected_graph = undirected_graph
         self.SR = SR
         self.C = C
         self.T = T
         self.name = name
+        self.undirected_graph = graph.to_undirected()
 
         self.create_model()
 
@@ -140,8 +139,13 @@ class WaterPipeEnhancementProblem(Problem):
         return self.name
 
     def get_parameters(self):
-        # to be implemented
-        return None
+        return {
+            "graph": self.graph,
+            "SR": self.SR,
+            "C": self.C,
+            "T": self.T,
+            "name": self.name,
+        }
 
 
 class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
@@ -158,6 +162,7 @@ class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
         """
         Initialize the water pipe enhancement problem generator instance
         following https://doi.org/10.1145/3378393.3402246
+
         :param random_seed: The random seed to use
         :param path_prefix:  Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
@@ -193,13 +198,11 @@ class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
 
     def generate(self):
         graph = self.base_graph.copy()
-        undirected_graph = graph.to_undirected()
 
         SR, C, T = self.generateCTR(graph)
 
         problem = WaterPipeEnhancementProblem(
             graph,
-            undirected_graph,
             SR,
             C,
             T,
@@ -223,8 +226,8 @@ class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
             list(graph.nodes()), size=C_size + T_size + R_size
         )
         C = selected_nodes[:C_size]
-        T = selected_nodes[C_size: C_size + T_size]
-        R = selected_nodes[C_size + T_size:]
+        T = selected_nodes[C_size : C_size + T_size]
+        R = selected_nodes[C_size + T_size :]
         for node in C:
             graph.nodes[node]["role"] = "C"
         for node in T:
@@ -255,7 +258,6 @@ class WaterPipeEnhancementGenerator(Generator[WaterPipeEnhancementProblem]):
 if __name__ == "__main__":
     generator_small_toronto = WaterPipeEnhancementGenerator(
         random_seed=1,
-        path_prefix="easy",
         graph_instance="small_toronto",
         housing_area_rate=0.01,
         housing_area_size=3,

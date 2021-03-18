@@ -18,6 +18,7 @@ class FCMNFProblem(Problem):
         """
         Construct a concrete Pyomo model for a
         Fixed-charge Multi-commodity Network Flow Problem
+
         :param graph: a directed networkx graph where each edge has
             an associated fixed cost, variable cost and a cap
         :param num_commodities: total number of commodities
@@ -109,8 +110,12 @@ class FCMNFProblem(Problem):
         return self.name
 
     def get_parameters(self):
-        # to be implemented
-        return None
+        return {
+            "graph": self.graph,
+            "num_commodities": self.num_commodities,
+            "od_list": self.od_list,
+            "name": self.name,
+        }
 
 
 class FCMNFGenerator(Generator[FCMNFProblem]):
@@ -132,6 +137,7 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
         """
         Initialize the Fixed-charge Multi-commodity Network Flow Problem
         generator instance following https://doi.org/10.1287/ijoc.1090.0348
+
         :param random_seed: The random seed to use
         :param path_prefix: Path prefix to pass to instance ``save()`` methods
             during batch generation. Must be set as a public instance attribute,
@@ -227,7 +233,6 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
 if __name__ == "__main__":
     generator = FCMNFGenerator(
         random_seed=1,
-        path_prefix="easy",
         min_n=70,
         max_n=70,
         er_prob=0.1,
