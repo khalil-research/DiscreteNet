@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Generic, List, TypeVar, Union
 from pathlib import Path
+import random
 
 from joblib import Parallel, delayed
 import numpy as np
@@ -55,7 +56,7 @@ class Generator(Generic[T]):
         :param seed: The random seed to use
         """
         self.random_seed = seed
-
+        random.seed(self.random_seed)
         np.random.seed(self.random_seed)
 
     @abstractmethod

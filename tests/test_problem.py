@@ -252,7 +252,10 @@ class TestSavingLoading:
         problem = MockProblem()
         problem.save(tmp_path)
 
-        problem.model.write.assert_called_with(str(tmp_path / "mock_problem.mps"))
+        problem.model.write.assert_called_with(
+            str(tmp_path / "mock_problem.mps"),
+            io_options={"symbolic_solver_labels": True},
+        )
 
         params_path = tmp_path / "mock_problem_parameters.pkl"
         assert not params_path.exists()
@@ -265,7 +268,10 @@ class TestSavingLoading:
         problem.is_linear = False
         problem.save(tmp_path)
 
-        problem.model.write.assert_called_with(str(tmp_path / "mock_problem.gms"))
+        problem.model.write.assert_called_with(
+            str(tmp_path / "mock_problem.gms"),
+            io_options={"symbolic_solver_labels": True},
+        )
 
     def test_save_extra_files(self, tmp_path):
         problem = LinearProblem()

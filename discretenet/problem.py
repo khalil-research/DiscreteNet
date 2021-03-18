@@ -842,7 +842,7 @@ class Problem(ABC):
         else:
             model_filename = self.__build_full_path(".gms", path_prefix)
 
-        self.model.write(model_filename)
+        self.model.write(model_filename, io_options={"symbolic_solver_labels": True})
 
         if not model_only:
             params_filename = self.__build_full_path(
