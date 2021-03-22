@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 import json
 from pathlib import Path
 import pickle
-from typing import Any, Dict, Union, Type, TypeVar
+from typing import Any, Dict, Generator, Union, Type, TypeVar
 
+from pyomo.core.base.constraint import IndexedConstraint, _GeneralConstraintData
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
 import networkx as nx
@@ -661,6 +662,28 @@ class Problem(ABC):
 
         raise ValueError("Unrecognized variable domain")
 
+    def __yield_constraints(self) -> Generator[_GeneralConstraintData, None, None]:
+        """
+        Yield the constraints within a model. Currently supports:
+        - ``pyo.Constraint``s defined as model properties
+        - Constraints within ``IndexedConstraint``s
+        - Constraints within ``ConstraintList``s (by nature of ``ConstraintList``
+          subclassing ``IndexedConstraint``)
+
+        TODO: The return type for this is ``_GeneralConstraintData``, because
+         that's what a ``ConstraintList`` will yield directly. There is no
+         public class we can use in its place, but this is an unstable
+         annotation relying on a private Pyomo class.
+        """
+
+        for x in self.model.component_objects(pyo.Constraint):
+            if isinstance(x, _GeneralConstraintData):
+                yield x
+            elif isinstance(x, IndexedConstraint):
+                # Iterating over an IndexedConstraint yields the index
+                for idx in x:
+                    yield x[idx]
+
     def get_variable_constraint_graph(self) -> nx.Graph:
         """
         Construct a bipartite Variable Constraint Graph of the problem instance
@@ -712,7 +735,7 @@ class Problem(ABC):
 
         G = nx.Graph()
 
-        for constr in self.model.component_objects(pyo.Constraint):
+        for constr in self.__yield_constraints():
             constr_name = constr.getname()
             is_linear, var_list = decompose_term(constr.body)
 
