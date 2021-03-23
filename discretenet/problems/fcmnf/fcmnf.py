@@ -181,7 +181,10 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
 
         od_list = self.generate_random_vars(graph)
         problem = FCMNFProblem(
-            graph, self.num_commodities, od_list, self.name + "_%d" % self.random_seed,
+            graph,
+            self.num_commodities,
+            od_list,
+            self.name + "_%d" % self.random_seed,
         )
         return problem
 
