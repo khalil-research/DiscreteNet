@@ -46,15 +46,6 @@ class FCMNFProblem(Problem):
         model.y = pyo.Var(model.edges, domain=pyo.Binary)
         model.x = pyo.Var(model.DK, domain=pyo.Binary)
 
-        # objective function
-        pyo.Objective(
-            expr=pyo.quicksum(
-                edge["length"] * model.x[node1, node2]
-                for node1, node2, edge in graph.edges(data=True)
-            ),
-            sense=pyo.minimize,
-        )
-
         model.objective = pyo.Objective(
             expr=pyo.quicksum(
                 edge["fixed_cost"] * model.y[node1, node2]
@@ -190,10 +181,7 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
 
         od_list = self.generate_random_vars(graph)
         problem = FCMNFProblem(
-            graph,
-            self.num_commodities,
-            od_list,
-            self.name + "_%d" % self.random_seed,
+            graph, self.num_commodities, od_list, self.name + "_%d" % self.random_seed,
         )
         return problem
 
