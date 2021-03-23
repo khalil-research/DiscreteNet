@@ -278,7 +278,7 @@ class TestSavingLoading:
 
     def test_save_extra_files(self, tmp_path):
         problem = LinearProblem()
-        problem.save(tmp_path, model_only=False)
+        problem.save(tmp_path, params=True, features=True)
 
         params_path = tmp_path / "linear_problem_parameters.pkl"
         assert params_path.exists()
@@ -292,7 +292,7 @@ class TestSavingLoading:
         original_problem = ProblemWithParameters(
             constr_coeffs=constr_coeffs, obj_coeffs=obj_coeffs
         )
-        original_problem.save(tmp_path, model_only=False)
+        original_problem.save(tmp_path, params=True, features=False)
 
         params_path = tmp_path / "problem_with_params_5_parameters.pkl"
 

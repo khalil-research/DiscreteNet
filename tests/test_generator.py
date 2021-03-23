@@ -136,7 +136,7 @@ def test_generator_reproducible_multiple_processes():
 def test_generator_calls_save_if_told_to(tmp_path):
     generate_mock_problem = MockGenerator(path_prefix=tmp_path)
     instances = generate_mock_problem(
-        n_instances=1, n_jobs=1, save=True, save_model_only=True
+        n_instances=1, n_jobs=1, save=True, save_params=False, save_features=False
     )
     instances[0].model.write.assert_called_with(
         str(tmp_path / "mock_problem.mps"), io_options={"symbolic_solver_labels": True}

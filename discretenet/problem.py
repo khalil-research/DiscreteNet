@@ -852,7 +852,9 @@ class Problem(ABC):
 
         return str(filename)
 
-    def save(self, path_prefix: Union[Path, str] = None, model_only=True) -> None:
+    def save(
+        self, path_prefix: Union[Path, str] = None, params=False, features=False
+    ) -> None:
         """
         Save the associated model, problem parameters, and problem features
 
@@ -862,8 +864,9 @@ class Problem(ABC):
         Parameters and features will be saved to json files.
 
         :param path_prefix: Folder to save to
-        :param model_only: Whether to save only the model, or parameters and
-               features as well
+        :param params: Whether to save model parameters to a pickle file, default False
+        :param features: Whether to save computed features to a json file, default False.
+               This can be very slow for large models.
         """
         if self.is_linear:
             model_filename = self.__build_full_path(".mps", path_prefix)
@@ -872,19 +875,22 @@ class Problem(ABC):
 
         self.model.write(model_filename, io_options={"symbolic_solver_labels": True})
 
-        if not model_only:
+        if params:
             params_filename = self.__build_full_path(
                 ".pkl", path_prefix, extra_params="_parameters"
             )
+
+            parameters = self.get_parameters()
+
+            with open(params_filename, "wb+") as fd:
+                pickle.dump(parameters, fd)
+
+        if features:
             features_filename = self.__build_full_path(
                 ".json", path_prefix, extra_params="_features"
             )
 
-            parameters = self.get_parameters()
             features = self.get_features()
-
-            with open(params_filename, "wb+") as fd:
-                pickle.dump(parameters, fd)
 
             with open(features_filename, "w+") as fd:
                 json.dump(features, fd)
