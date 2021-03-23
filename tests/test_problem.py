@@ -48,8 +48,11 @@ class LinearProblem(Problem):
         model.z = pyo.Var(domain=pyo.Boolean)
 
         model.constr1 = pyo.Constraint(expr=2 * model.x[1] + 3 * model.x[2] <= 10)
-        model.constr2 = pyo.Constraint(expr=model.x[1] + model.x[2] + model.y + 1 >= 2)
-        model.constr3 = pyo.Constraint(expr=model.y + model.z == 3)
+
+        # Use a constraint list for fun
+        model.constrs = pyo.ConstraintList()
+        model.constrs.add(model.x[1] + model.x[2] + model.y + 1 >= 2)
+        model.constrs.add(model.y + model.z == 3)
 
         # Maximizing objective, to make sure the coeffs are flipped
         model.objective = pyo.Objective(
@@ -185,7 +188,7 @@ class TestLinearVCG:
         assert vcg.nodes["z"]["obj_coeff"] == 4
 
     def test_constraint_nodes_labelled(self, vcg):
-        expected_constr_nodes = ["constr1", "constr2", "constr3"]
+        expected_constr_nodes = ["constr1", "constrs[1]", "constrs[2]"]
         actual_constr_nodes = [
             node_name
             for node_name, node_data in vcg.nodes(data=True)
@@ -194,22 +197,22 @@ class TestLinearVCG:
         assert sorted(expected_constr_nodes) == actual_constr_nodes
 
     def test_constraint_node_kinds(self, vcg):
-        # constr1 and constr2 are leq (after adjustment), constr3 is eq
+        # constr1 and constrs[1] are leq (after adjustment), constrs[2] is eq
         assert vcg.nodes["constr1"]["kind"] == "leq"
-        assert vcg.nodes["constr2"]["kind"] == "leq"
-        assert vcg.nodes["constr3"]["kind"] == "eq"
+        assert vcg.nodes["constrs[1]"]["kind"] == "leq"
+        assert vcg.nodes["constrs[2]"]["kind"] == "eq"
 
     def test_constraint_node_bounds(self, vcg):
-        # Bounds - constr2 should have its bounds adjusted to (2 - 1)*(-1) = -1
+        # Bounds - constrs[1] should have its bounds adjusted to (2 - 1)*(-1) = -1
         assert vcg.nodes["constr1"]["bound"] == 10
-        assert vcg.nodes["constr2"]["bound"] == -1
-        assert vcg.nodes["constr3"]["bound"] == 3
+        assert vcg.nodes["constrs[1]"]["bound"] == -1
+        assert vcg.nodes["constrs[2]"]["bound"] == 3
 
     def test_edges(self, vcg):
         expected_edges = {
             "constr1": [("x[1]", 2), ("x[2]", 3)],
-            "constr2": [("x[1]", 1), ("x[2]", 1), ("y", 1)],
-            "constr3": [("y", 1), ("z", 1)],
+            "constrs[1]": [("x[1]", 1), ("x[2]", 1), ("y", 1)],
+            "constrs[2]": [("y", 1), ("z", 1)],
         }
 
         assert len(vcg.edges) == 7
@@ -275,7 +278,7 @@ class TestSavingLoading:
 
     def test_save_extra_files(self, tmp_path):
         problem = LinearProblem()
-        problem.save(tmp_path, model_only=False)
+        problem.save(tmp_path, params=True, features=True)
 
         params_path = tmp_path / "linear_problem_parameters.pkl"
         assert params_path.exists()
@@ -289,7 +292,7 @@ class TestSavingLoading:
         original_problem = ProblemWithParameters(
             constr_coeffs=constr_coeffs, obj_coeffs=obj_coeffs
         )
-        original_problem.save(tmp_path, model_only=False)
+        original_problem.save(tmp_path, params=True, features=False)
 
         params_path = tmp_path / "problem_with_params_5_parameters.pkl"
 

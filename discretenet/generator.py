@@ -45,6 +45,8 @@ class Generator(Generic[T]):
 
         self.random_seed = random_seed
         self.path_prefix = path_prefix
+        self.save_params = False
+        self.save_features = False
 
         self.set_seed(random_seed)
 
@@ -76,10 +78,14 @@ class Generator(Generic[T]):
     def _generate_and_save(self, random_seed) -> T:
         self.set_seed(random_seed)
         instance = self.generate()
-        instance.save(self.path_prefix)
+        instance.save(
+            self.path_prefix, params=self.save_params, features=self.save_features
+        )
         return instance
 
-    def __call__(self, n_instances, n_jobs=-1, save=True) -> List[T]:
+    def __call__(
+        self, n_instances, n_jobs=-1, save=True, save_params=True, save_features=False
+    ) -> List[T]:
         """
         Generate and return ``n_instances`` problem instances by calling ``generate()``
 
@@ -99,9 +105,15 @@ class Generator(Generic[T]):
         :param n_jobs: Number of joblib jobs to use
         :param save: Whether to immediately save the generated instances. Folder is
             set by ``self.path_prefix``.
+        :param save_params: Whether to save problem parameters as a pickle file. Allows
+            for re-instantiating the Problem instances at a later time.
+        :param save_features: Whether to save computed features as a json file. This
+            can be slow for large models.
         :return: A list of generated concrete ``Problem`` instances
         """
 
+        self.save_params = save_params
+        self.save_features = save_features
         func = self._generate_and_save if save else self._generate
         random_states = np.random.randint(np.iinfo(np.int32).max, size=n_instances)
 

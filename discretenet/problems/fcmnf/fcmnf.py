@@ -46,15 +46,6 @@ class FCMNFProblem(Problem):
         model.y = pyo.Var(model.edges, domain=pyo.Binary)
         model.x = pyo.Var(model.DK, domain=pyo.Binary)
 
-        # objective function
-        pyo.Objective(
-            expr=pyo.quicksum(
-                edge["length"] * model.x[node1, node2]
-                for node1, node2, edge in graph.edges(data=True)
-            ),
-            sense=pyo.minimize,
-        )
-
         model.objective = pyo.Objective(
             expr=pyo.quicksum(
                 edge["fixed_cost"] * model.y[node1, node2]
