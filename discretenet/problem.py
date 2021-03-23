@@ -837,8 +837,10 @@ class Problem(ABC):
         if path_prefix:
             if isinstance(path_prefix, str):
                 path_prefix = Path(path_prefix).resolve()
+        else:
+            path_prefix = Path.cwd()
 
-            filename = path_prefix.joinpath(filename)
+        filename = path_prefix.joinpath(filename)
 
         filename = Path(filename)
 
