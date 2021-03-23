@@ -877,11 +877,14 @@ class Problem(ABC):
                 ".json", path_prefix, extra_params="_features"
             )
 
+            parameters = self.get_parameters()
+            features = self.get_features()
+
             with open(params_filename, "wb+") as fd:
-                pickle.dump(self.get_parameters(), fd)
+                pickle.dump(parameters, fd)
 
             with open(features_filename, "w+") as fd:
-                json.dump(self.get_features(), fd)
+                json.dump(features, fd)
 
     def save_graph(self, path_prefix: str = None) -> None:
         pass
