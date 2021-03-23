@@ -938,7 +938,7 @@ class Problem(ABC):
 
             my_problem = MyProblem(**kwargs)
 
-            my_problem.save(model_only=False)
+            my_problem.save(params=True, features=False)
 
             ...
 
