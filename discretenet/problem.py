@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import lru_cache
 import json
 from pathlib import Path
 import pickle
@@ -72,6 +73,7 @@ class Problem(ABC):
         """
         pass
 
+    @lru_cache(maxsize=None)
     def get_features(self) -> Dict[str, float]:
         """
         Return a dictionary of computed features for the problem instance
@@ -684,6 +686,7 @@ class Problem(ABC):
                 for idx in x:
                     yield x[idx]
 
+    @lru_cache(maxsize=None)
     def get_variable_constraint_graph(self) -> nx.Graph:
         """
         Construct a bipartite Variable Constraint Graph of the problem instance
