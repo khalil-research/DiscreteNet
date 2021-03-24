@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from functools import lru_cache
 import json
 from pathlib import Path
 import pickle
@@ -38,6 +37,8 @@ class Problem(ABC):
         """
         Generate a concrete Pyomo model of the problem
 
+        Subclasses must first call ``super().__init__()``
+
         By the end of initialization, the model must be stored in ``self.model``.
         The model objective must be stored in ``self.model.objective``.
 
@@ -47,7 +48,8 @@ class Problem(ABC):
         After initialization, the model is assumed to be immutable.
         """
 
-        pass
+        # Caching for the VCG
+        self.__variable_constraint_graph = None
 
     @abstractmethod
     def get_name(self) -> str:
@@ -73,7 +75,6 @@ class Problem(ABC):
         """
         pass
 
-    @lru_cache(maxsize=None)
     def get_features(self) -> Dict[str, float]:
         """
         Return a dictionary of computed features for the problem instance
@@ -686,7 +687,6 @@ class Problem(ABC):
                 for idx in x:
                     yield x[idx]
 
-    @lru_cache(maxsize=None)
     def get_variable_constraint_graph(self) -> nx.Graph:
         """
         Construct a bipartite Variable Constraint Graph of the problem instance
@@ -735,6 +735,9 @@ class Problem(ABC):
 
         :return: A bipartite variable constraint graph
         """
+
+        if self.__variable_constraint_graph is not None:
+            return self.__variable_constraint_graph
 
         G = nx.Graph()
 
@@ -824,6 +827,8 @@ class Problem(ABC):
                     )
 
                 G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
+
+        self.__variable_constraint_graph = G
 
         return G
 
