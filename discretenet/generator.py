@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Generic, List, TypeVar, Union
+from typing import Generic, List, Optional, TypeVar, Union
 from pathlib import Path
 import random
 
@@ -47,6 +47,7 @@ class Generator(Generic[T]):
         self.path_prefix = path_prefix
         self.save_params = False
         self.save_features = False
+        self.return_instances = True
 
         self.set_seed(random_seed)
 
@@ -71,9 +72,12 @@ class Generator(Generic[T]):
 
         pass
 
-    def _generate(self, random_seed) -> T:
+    def _generate(self, random_seed) -> Optional[T]:
         self.set_seed(random_seed)
-        return self.generate()
+        instance = self.generate()
+
+        if self.return_instances:
+            return instance
 
     def _generate_and_save(self, random_seed) -> T:
         self.set_seed(random_seed)
@@ -81,11 +85,20 @@ class Generator(Generic[T]):
         instance.save(
             self.path_prefix, params=self.save_params, features=self.save_features
         )
-        return instance
+
+        if self.return_instances:
+            return instance
 
     def __call__(
-        self, n_instances, n_jobs=-1, save=True, save_params=True, save_features=False
-    ) -> List[T]:
+        self,
+        n_instances,
+        n_jobs=-1,
+        save=True,
+        save_params=True,
+        save_features=False,
+        return_instances=True,
+        verbosity: int = 0,
+    ) -> Optional[List[T]]:
         """
         Generate and return ``n_instances`` problem instances by calling ``generate()``
 
@@ -110,11 +123,20 @@ class Generator(Generic[T]):
             if ``save`` is true.
         :param save_features: Whether to save computed features as a json file. This
             can be slow for large models. Only applies if ``save`` is True.
-        :return: A list of generated concrete ``Problem`` instances
+        :param return_instances: If False, do not return the generated instances.
+            This can speed up parallel generation where instances are saved to disk,
+            since they do not need to be pickled to be returned to the main process.
+            Default True.
+        :param verbosity: Joblib Parallel verbosity. If nonzero, print progress updates.
+            If more than 10, all iterations are reported.
+        :return: A list of generated concrete ``Problem`` instances, or None if
+            ``return_instances`` is False
         """
 
         self.save_params = save_params
         self.save_features = save_features
+        self.return_instances = return_instances
+
         func = self._generate_and_save if save else self._generate
         random_states = np.random.randint(np.iinfo(np.int32).max, size=n_instances)
 
@@ -125,9 +147,10 @@ class Generator(Generic[T]):
             instances = [func(random_seed) for random_seed in random_states]
 
         else:
-            with Parallel(n_jobs=n_jobs, backend="loky") as parallel:
+            with Parallel(n_jobs=n_jobs, backend="loky", verbose=verbosity) as parallel:
                 instances = parallel(
                     delayed(func)(random_seed) for random_seed in random_states
                 )
 
-        return instances
+        if self.return_instances:
+            return instances
