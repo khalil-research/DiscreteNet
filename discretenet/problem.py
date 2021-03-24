@@ -49,7 +49,7 @@ class Problem(ABC):
         """
 
         # Caching for the VCG
-        self.variable_constraint_graph = None
+        self.__variable_constraint_graph = None
 
     @abstractmethod
     def get_name(self) -> str:
@@ -736,8 +736,8 @@ class Problem(ABC):
         :return: A bipartite variable constraint graph
         """
 
-        if self.variable_constraint_graph is not None:
-            return self.variable_constraint_graph
+        if self.__variable_constraint_graph is not None:
+            return self.__variable_constraint_graph
 
         G = nx.Graph()
 
@@ -828,7 +828,7 @@ class Problem(ABC):
 
                 G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
 
-        self.variable_constraint_graph = G
+        self.__variable_constraint_graph = G
 
         return G
 
