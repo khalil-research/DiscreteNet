@@ -106,9 +106,10 @@ class Generator(Generic[T]):
         :param save: Whether to immediately save the generated instances. Folder is
             set by ``self.path_prefix``.
         :param save_params: Whether to save problem parameters as a pickle file. Allows
-            for re-instantiating the Problem instances at a later time.
+            for re-instantiating the Problem instances at a later time. Only applies
+            if ``save`` is true.
         :param save_features: Whether to save computed features as a json file. This
-            can be slow for large models.
+            can be slow for large models. Only applies if ``save`` is True.
         :return: A list of generated concrete ``Problem`` instances
         """
 
