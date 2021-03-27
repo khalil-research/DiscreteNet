@@ -122,8 +122,8 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
         commodities_quantities_range_lower: int = 10,
         commodities_quantities_range_upper: int = 100,
         fixed_to_variable_ratio: int = 100,
-        edge_upper: int = 200,
-        num_commodities: int = 200,
+        edge_upper: int = 35,
+        num_commodities: int = 35,
     ):
         """
         Initialize the Fixed-charge Multi-commodity Network Flow Problem
@@ -224,15 +224,15 @@ class FCMNFGenerator(Generator[FCMNFProblem]):
 if __name__ == "__main__":
     generator = FCMNFGenerator(
         random_seed=1,
-        min_n=70,
-        max_n=70,
+        min_n=100,
+        max_n=100,
         er_prob=0.1,
         variable_costs_range_lower=11,
         variable_costs_range_upper=50,
         commodities_quantities_range_lower=10,
         commodities_quantities_range_upper=100,
         fixed_to_variable_ratio=100,
-        edge_upper=200,
-        num_commodities=200,
+        edge_upper=35,
+        num_commodities=35,
     )
     generator(1, 1)
