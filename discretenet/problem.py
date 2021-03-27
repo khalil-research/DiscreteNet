@@ -4,6 +4,8 @@ from pathlib import Path
 import pickle
 from typing import Any, Dict, Generator, Union, Type, TypeVar
 
+import time
+
 from pyomo.core.base.constraint import IndexedConstraint, _GeneralConstraintData
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
@@ -49,7 +51,11 @@ class Problem(ABC):
         """
 
         # Caching for the VCG
-        self.__variable_constraint_graph = None
+        self._variable_constraint_graph = None
+
+        # Cache for model block names. This significantly speeds up
+        # runtime of VCG generation and feature computation (well over 1000x).
+        self._name_buffer = {}
 
     @abstractmethod
     def get_name(self) -> str:
@@ -507,19 +513,33 @@ class Problem(ABC):
             self.model.objective.expr
         )
 
-        objective_coefficients = [
-            (abs(coeff), var) for coeff, var in objective_var_list if var is not None
-        ]
-        continuous_objective_coefficients = [
-            (abs(coeff), var)
-            for coeff, var in objective_var_list
-            if var is not None and self._get_variable_domain(var) == "continuous"
-        ]
-        non_continuous_objective_coefficients = [
-            (abs(coeff), var)
-            for coeff, var in objective_var_list
-            if var is not None and self._get_variable_domain(var) != "continuous"
-        ]
+        objective_coefficients = (
+            [
+                (abs(coeff), var.getname(name_buffer=self._name_buffer))
+                for coeff, var in objective_var_list
+                if var is not None
+            ]
+            if is_objective_linear
+            else []
+        )
+        continuous_objective_coefficients = (
+            [
+                (abs(coeff), var.getname(name_buffer=self._name_buffer))
+                for coeff, var in objective_var_list
+                if var is not None and self._get_variable_domain(var) == "continuous"
+            ]
+            if is_objective_linear
+            else []
+        )
+        non_continuous_objective_coefficients = (
+            [
+                (abs(coeff), var.getname(name_buffer=self._name_buffer))
+                for coeff, var in objective_var_list
+                if var is not None and self._get_variable_domain(var) != "continuous"
+            ]
+            if is_objective_linear
+            else []
+        )
 
         # Absolute objective function coefficients
         for variable_type, coeff_data in [
@@ -556,8 +576,8 @@ class Problem(ABC):
                 )
 
             coeffs = []
-            for coeff, var in coeff_data:
-                num_constraints = len(vcg.edges([var.getname()]))
+            for coeff, var_name in coeff_data:
+                num_constraints = len(vcg.edges([var_name]))
                 if num_constraints == 0:
                     continue
 
@@ -585,8 +605,8 @@ class Problem(ABC):
                 )
 
             coeffs = []
-            for coeff, var in coeff_data:
-                num_constraints = len(vcg.edges([var.getname()]))
+            for coeff, var_name in coeff_data:
+                num_constraints = len(vcg.edges([var_name]))
                 if num_constraints == 0:
                     continue
 
@@ -677,6 +697,10 @@ class Problem(ABC):
          that's what a ``ConstraintList`` will yield directly. There is no
          public class we can use in its place, but this is an unstable
          annotation relying on a private Pyomo class.
+
+         It is possible to avoid this by iterating over
+         ``self.model.component_data_objects(pyo.Constraint)`` instead, however
+         that turns out to be slower.
         """
 
         for x in self.model.component_objects(pyo.Constraint):
@@ -736,13 +760,13 @@ class Problem(ABC):
         :return: A bipartite variable constraint graph
         """
 
-        if self.__variable_constraint_graph is not None:
-            return self.__variable_constraint_graph
+        if self._variable_constraint_graph is not None:
+            return self._variable_constraint_graph
 
         G = nx.Graph()
 
         for constr in self.__yield_constraints():
-            constr_name = constr.getname()
+            constr_name = constr.getname(name_buffer=self._name_buffer)
             is_linear, var_list = decompose_term(constr.body)
 
             # All constraints in the VCG will either be <= or == bounded
@@ -779,29 +803,33 @@ class Problem(ABC):
                 # Pyomo currently doesn't support extracting coefficients
                 # for nonlinear constraints
                 for var in identify_variables(constr.body):
+                    var_name = var.getname(name_buffer=self._name_buffer)
                     # Graph nodes are sets, so this is fine
                     G.add_node(
-                        var.getname(),
+                        var_name,
                         type="variable",
                         domain=self._get_variable_domain(var),
                     )
 
                     # No coeff attribute for non-linear constraints
-                    G.add_edge(constr_name, var.getname(), is_linear=False)
+                    G.add_edge(constr_name, var_name, is_linear=False)
             else:
+                var: pyo.Var
                 for coeff, var in var_list:
                     if var is None:
                         # Constant term - subtract from bound
                         bound -= coeff * multiplier
                         continue
 
+                    var_name = var.getname(name_buffer=self._name_buffer)
+
                     G.add_node(
-                        var.getname(),
+                        var_name,
                         type="variable",
                         domain=self._get_variable_domain(var),
                     )
 
-                    G.add_edge(constr_name, var.getname(), is_linear=True, coeff=coeff)
+                    G.add_edge(constr_name, var_name, is_linear=True, coeff=coeff)
 
             # Add attributes to the constraint node
             G.nodes[constr_name]["bound"] = bound
@@ -818,17 +846,19 @@ class Problem(ABC):
                     # It's technically possible to add a constant term to the objective
                     continue
 
+                var_name = var.getname(name_buffer=self._name_buffer)
+
                 # If the variable is not in the VCG by now, that means it was never
                 # part of a constraint
-                if var.getname() not in G.nodes:
+                if var_name not in G.nodes:
                     raise ValueError(
-                        f"Variable {var.getname()} appears in the objective "
+                        f"Variable {var_name} appears in the objective "
                         "function without participating in any constraints"
                     )
 
-                G.nodes[var.getname()]["obj_coeff"] = coeff * objective_multiplier
+                G.nodes[var_name]["obj_coeff"] = coeff * objective_multiplier
 
-        self.__variable_constraint_graph = G
+        self._variable_constraint_graph = G
 
         return G
 
