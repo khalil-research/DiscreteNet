@@ -4,8 +4,6 @@ from pathlib import Path
 import pickle
 from typing import Any, Dict, Generator, Union, Type, TypeVar
 
-import time
-
 from pyomo.core.base.constraint import IndexedConstraint, _GeneralConstraintData
 from pyomo.core.expr.current import identify_variables, decompose_term
 import pyomo.environ as pyo
