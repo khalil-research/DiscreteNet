@@ -261,7 +261,7 @@ if __name__ == "__main__":
         graph_instance="small_toronto",
         housing_area_rate=0.01,
         housing_area_size=3,
-        critical_rate=0.01,
+        critical_rate=0.025,
         water_source_rate=0.005,
     )
     generator_small_toronto(1, 1)
