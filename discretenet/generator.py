@@ -130,12 +130,14 @@ class Generator(Generic[T]):
         :param verbosity: Joblib Parallel verbosity. If nonzero, print progress updates.
             If more than 10, all iterations are reported.
         :return: A list of generated concrete ``Problem`` instances, or None if
-            ``return_instances`` is False
+            ``return_instances`` is False.
         """
 
         self.save_params = save_params
         self.save_features = save_features
         self.return_instances = return_instances
+
+        starting_seed = self.random_seed
 
         func = self._generate_and_save if save else self._generate
         random_states = np.random.randint(np.iinfo(np.int32).max, size=n_instances)
@@ -151,6 +153,8 @@ class Generator(Generic[T]):
                 instances = parallel(
                     delayed(func)(random_seed) for random_seed in random_states
                 )
+
+        self.set_seed(starting_seed + 1)
 
         if self.return_instances:
             return instances
