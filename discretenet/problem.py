@@ -492,7 +492,7 @@ class Problem(ABC):
                     if not data["is_linear"]:
                         continue
 
-                    constraint_bound = vcg.nodes[constraint_node_name]["bound"]
+                    constraint_bound = vcg.nodes[constraint_node_name]["rhs"]
 
                     if constraint_bound == 0:
                         continue
@@ -619,10 +619,10 @@ class Problem(ABC):
 
         # Constraint bound features
         leq_constraint_bounds = [
-            data["bound"] for name, data in constraint_nodes if data["kind"] == "leq"
+            data["rhs"] for name, data in constraint_nodes if data["kind"] == "leq"
         ]
         eq_constraint_bounds = [
-            data["bound"] for name, data in constraint_nodes if data["kind"] == "eq"
+            data["rhs"] for name, data in constraint_nodes if data["kind"] == "eq"
         ]
 
         if leq_constraint_bounds:
@@ -720,7 +720,7 @@ class Problem(ABC):
         Variable nodes have the following attributes:
         - ``type``: "variable"
         - ``domain``: One of "continuous", "integer", or "binary"
-        - ``obj_coeff``: The coefficient of the variable in the objective function.
+        - ``objcoeff``: The coefficient of the variable in the objective function.
           Only present the objective is linear and the variable participates in it.
 
         Constraint nodes have the following attributes:
@@ -750,7 +750,7 @@ class Problem(ABC):
         creating a new Pyomo Set.
 
         If the objective function is linear, variables which participate in the
-        objective function have their objective coefficient in the ``obj_coeff``
+        objective function have their objective coefficient in the ``objcoeff``
         node attribute. Since objectives can be minimized or maximized, the
         objective is converted to minimizing sense for the VCG, and objective
         coefficients negated as necessary.
@@ -770,16 +770,16 @@ class Problem(ABC):
             # All constraints in the VCG will either be <= or == bounded
             if constr.has_lb() and not constr.has_ub():  # constr >= b
                 multiplier = -1
-                bound = constr.lower()
+                rhs = constr.lower()
                 kind = "leq"
                 original_kind = "geq"
             elif not constr.has_lb() and constr.has_ub():  # constr <= b
                 multiplier = 1
-                bound = constr.upper()
+                rhs  = constr.upper()
                 kind = original_kind = "leq"
             elif constr.lower() == constr.upper():  # constr == b
                 multiplier = 1
-                bound = constr.upper()
+                rhs = constr.upper()
                 kind = original_kind = "eq"
             else:
                 # lb <= constr <= ub
@@ -787,7 +787,7 @@ class Problem(ABC):
                     "Double-bounded constraints are not supported"
                 )
 
-            bound *= multiplier
+            rhs *= multiplier
 
             G.add_node(
                 constr_name,
@@ -815,8 +815,8 @@ class Problem(ABC):
                 var: pyo.Var
                 for coeff, var in var_list:
                     if var is None:
-                        # Constant term - subtract from bound
-                        bound -= coeff * multiplier
+                        # Constant term - subtract from rhs
+                        rhs -= coeff * multiplier
                         continue
 
                     var_name = var.getname(name_buffer=self._name_buffer)
@@ -830,7 +830,7 @@ class Problem(ABC):
                     G.add_edge(constr_name, var_name, is_linear=True, coeff=coeff)
 
             # Add attributes to the constraint node
-            G.nodes[constr_name]["bound"] = bound
+            G.nodes[constr_name]["rhs"] = rhs
 
         # Tag variable nodes with their coefficient in the objective
         is_objective_linear, objective_var_list = decompose_term(
@@ -854,7 +854,7 @@ class Problem(ABC):
                         "function without participating in any constraints"
                     )
 
-                G.nodes[var_name]["obj_coeff"] = coeff * objective_multiplier
+                G.nodes[var_name]["objcoeff"] = coeff * objective_multiplier
 
         self._variable_constraint_graph = G
 
